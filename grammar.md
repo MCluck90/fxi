@@ -1,6 +1,11 @@
 # Grammar
 
 ```
+// Comments can occur at any point in the code
+comment ::= "//" anything
+  | "/*" anything "*/"
+  ;
+
 keyword ::= "atoi"
   | "else"
   | "false"
