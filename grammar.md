@@ -87,7 +87,7 @@ statement ::= "{" { statement } "}"
   | "while" "(" expression ")" statement
   | "rtn" [ expression ] ";"
   | "write" expression ";"
-  | "read" expression ";"
+  | "read" identifier ";"
   ;
 ```
 
