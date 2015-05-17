@@ -1,9 +1,12 @@
 'use strict';
 
-var Scanner = require('./scanner.js'),
-    Syntax = require('./syntax.js');
+var path = require('path'),
+    argv = require('minimist')(process.argv.slice(2)),
+    Scanner = require('./scanner.js'),
+    Syntax = require('./syntax.js'),
+    filename = argv._[0];
 
-Scanner.init('test.fxi', function() {
+Scanner.init(path.join(process.cwd(), filename), function() {
   try {
     Syntax.checkSyntax();
   } catch(e) {
