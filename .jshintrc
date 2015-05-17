@@ -1,0 +1,23 @@
+{
+  "curly": true,
+  "eqeqeq": true,
+  "immed": true,
+  "latedef": true,
+  "multistr": true,
+  "newcap": false,
+  "quotmark": "single",
+  "undef": true,
+  "unused": true,
+  "strict": true,
+  "shadow": true,
+  "globalstrict": true,
+  "loopfunc": true,
+  "node": true,
+
+  "predef": [
+    "before",
+    "beforeEach",
+    "describe",
+    "it"
+  ]
+}

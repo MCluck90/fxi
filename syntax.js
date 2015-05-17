@@ -1,3 +1,5 @@
+'use strict';
+
 var tokens = require('./scanner.js'),
     TokenTypes = tokens.TokenTypes;
 
@@ -254,12 +256,12 @@ var Syntax = {
       checkTokenType(TokenTypes.CHARACTER);
     } else if (lexeme === 'atoi') {
       checkLexeme('atoi');
-      checkLexeme('(')
+      checkLexeme('(');
       this.expression();
       checkLexeme(')');
     } else if (lexeme === 'itoa') {
       checkLexeme('itoa');
-      checkLexeme('(')
+      checkLexeme('(');
       this.expression();
       checkLexeme(')');
     } else if (token.type === TokenTypes.IDENTIFIER) {
