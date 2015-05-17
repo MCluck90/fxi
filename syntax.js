@@ -76,12 +76,39 @@ var Syntax = {
   },
 
   /**
+   * identifier "=" expression ";"
+   * fn_declaration
+   */
+  variable_declaration: function(depthCheck) {
+    if (depthCheck) {
+      return tokens.currentToken.type === TokenTypes.IDENTIFIER ||
+             this.fn_declaration(true);
+    }
+
+    var nextToken = tokens.peek();
+    if (nextToken.type === TokenTypes.ASSIGNMENT) {
+      checkTokenType(TokenTypes.IDENTIFIER);
+      checkLexeme('=');
+      this.expression();
+      checkLexeme(';');
+    } else if (nextToken.type === TokenTypes.ARROW) {
+      this.fn_declaration();
+    } else {
+      checkTokenType(TokenTypes.IDENTIFIER);
+      throw new Error('Expected assignment or arrow, found ' + tokens.currentToken.lexeme);
+    }
+  },
+
+  /**
    * identifier lambda
    */
   fn_declaration: function(depthCheck) {
     if (depthCheck) {
-      return false;
+      return tokens.currentToken.type === TokenTypes.IDENTIFIER;
     }
+
+    checkTokenType(TokenTypes.IDENTIFIER);
+    this.lambda();
   },
 
   /**
@@ -94,11 +121,222 @@ var Syntax = {
 
     checkLexeme('=>');
     checkLexeme('(');
-    // parameter_list
+    while (this.parameter_list(true)) {
+      this.parameter_list();
+    }
     checkLexeme(')');
     checkLexeme('{');
+    while (this.statement(true)) {
+      this.statement();
+    }
     // statement
     checkLexeme('}');
+  },
+
+  /**
+   * identifier { "," identifier }
+   */
+  parameter_list: function(depthCheck) {
+    if (depthCheck) {
+      return tokens.currentToken.type === TokenTypes.IDENTIFIER;
+    }
+
+    checkTokenType(TokenTypes.IDENTIFIER);
+    while (tokens.currentToken.lexeme === ',') {
+      checkLexeme(',');
+      checkTokenType(TokenTypes.IDENTIFIER);
+    }
+  },
+
+  /**
+   * "{" { statement } "}"
+   * variable_declaration
+   * expression ";"
+   * "if" "(" expression ")" statement [ "else" statement ]
+   * "while" "(" expression ")" statement
+   * "rtn" [ expression ] ";"
+   * "write" expression ";"
+   * "read" expression ";"
+   */
+  statement: function(depthCheck) {
+    var lexeme = tokens.currentToken.lexeme;
+    if (depthCheck) {
+      return lexeme === '{' ||
+             this.variable_declaration(true) ||
+             this.expression(true) ||
+             lexeme === 'if' ||
+             lexeme === 'while' ||
+             lexeme === 'rtn' ||
+             lexeme === 'write' ||
+             lexeme === 'read';
+    }
+
+    if (lexeme === '{') {
+      checkLexeme('{');
+      while (this.statement(true)) {
+        this.statement();
+      }
+    } else if (this.variable_declaration(true)) {
+      this.variable_declaration();
+    } else if (this.expression(true)) {
+      this.expression();
+      checkLexeme(';');
+    } else if (lexeme === 'if') {
+      checkLexeme('if');
+      checkLexeme('(');
+      this.expression();
+      checkLexeme(')');
+      this.statement();
+      if (tokens.currentToken.lexeme === 'else') {
+        checkLexeme('else');
+        this.statement();
+      }
+    } else if (lexeme === 'while') {
+      checkLexeme('while');
+      checkLexeme('(');
+      this.expression();
+      checkLexeme(')');
+      this.statement();
+    } else if (lexeme === 'rtn') {
+      checkLexeme('rtn');
+      if (this.expression(true)) {
+        this.expression();
+      }
+      checkLexeme(';');
+    } else if (lexeme === 'write') {
+      checkLexeme('write');
+      this.expression();
+      checkLexeme(';');
+    } else if (lexeme === 'read') {
+      checkLexeme('read');
+      checkTokenType(TokenTypes.IDENTIFIER);
+      checkLexeme(';');
+    } else {
+      throw new Error('Invalid statement');
+    }
+  },
+
+  /**
+   * "(" expression ")" [ exp_z ]
+   * "true" [ exp_z ]
+   * "false" [ exp_z ]
+   * number_literal [ exp_z ]
+   * character_literal [ exp_z ]
+   * "atoi" "(" expression ")" [ exp_z ]
+   * "itoa" "(" expression ")" [ exp_z ]
+   * identifier [ fn_call ] [ exp_z ]
+   */
+  expression: function(depthCheck) {
+    var token = tokens.currentToken,
+        lexeme = token.lexeme;
+    if (depthCheck) {
+      return lexeme === '(' ||
+             lexeme === 'true' ||
+             lexeme === 'false' ||
+             token.type === TokenTypes.NUMBER ||
+             token.type === TokenTypes.CHARACTER ||
+             lexeme === 'atoi' ||
+             lexeme === 'itoa' ||
+             token.type === TokenTypes.IDENTIFIER;
+    }
+
+    if (lexeme === '(') {
+      checkLexeme('(');
+      this.expression();
+      checkLexeme(')');
+    } else if (lexeme === 'true') {
+      checkLexeme('true');
+    } else if (lexeme === 'false') {
+      checkLexeme('false');
+    } else if (token.type === TokenTypes.NUMBER) {
+      checkTokenType(TokenTypes.NUMBER);
+    } else if (token.type === TokenTypes.CHARACTER) {
+      checkTokenType(TokenTypes.CHARACTER);
+    } else if (lexeme === 'atoi') {
+      checkLexeme('atoi');
+      checkLexeme('(')
+      this.expression();
+      checkLexeme(')');
+    } else if (lexeme === 'itoa') {
+      checkLexeme('itoa');
+      checkLexeme('(')
+      this.expression();
+      checkLexeme(')');
+    } else if (token.type === TokenTypes.IDENTIFIER) {
+      checkTokenType(TokenTypes.IDENTIFIER);
+      if (this.fn_call(true)) {
+        this.fn_call();
+      }
+    } else {
+      throw new Error('Invalid expression');
+    }
+
+    if (this.exp_z(true)) {
+      this.exp_z();
+    }
+  },
+
+  /**
+   * "=" expression
+   * "&&" expression
+   * "||" expression
+   * "==" expression
+   * "!=" expression
+   * "<=" expression
+   * ">=" expression
+   * "<" expression
+   * ">" expression
+   * "+" expression
+   * "-" expression
+   * "*" expression
+   * "/" expression
+   */
+  exp_z: function(depthCheck) {
+    var type = tokens.currentToken.type,
+        isCorrectType = type === TokenTypes.ASSIGNMENT ||
+                        type === TokenTypes.BOOLEAN ||
+                        type === TokenTypes.RELATIONAL ||
+                        type === TokenTypes.MATH;
+    if (depthCheck) {
+      return isCorrectType;
+    }
+
+    if (isCorrectType) {
+      tokens.nextToken();
+      this.expression();
+    } else {
+      throw new Error('Expected assignment, boolean expression, or math expression');
+    }
+  },
+
+  /**
+   * "(" [ arg_list ] ")"
+   */
+  fn_call: function(depthCheck) {
+    if (depthCheck) {
+      return tokens.currentToken.lexeme === '(';
+    }
+
+    checkLexeme('(');
+    if (this.arg_list(true)) {
+      this.arg_list();
+    }
+    checkLexeme(')');
+  },
+
+  /**
+   * expression { "," expression }
+   */
+  arg_list: function(depthCheck) {
+    if (depthCheck) {
+      return this.expression(true);
+    }
+
+    this.expression();
+    while (tokens.currentToken.lexeme === ',') {
+      checkLexeme(',');
+      this.expression();
+    }
   }
 };
 

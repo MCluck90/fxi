@@ -101,7 +101,7 @@ expression ::= "(" expression ")" [ exp_z ]
   | character_literal [ exp_z ]
   | "atoi" "(" expression ")" [ exp_z ]
   | "itoa" "(" expression ")" [ exp_z ]
-  | identifier [fn_call] [ exp_z ]
+  | identifier [ fn_call ] [ exp_z ]
   ;
 
 exp_z ::= "=" expression
