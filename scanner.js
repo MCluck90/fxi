@@ -66,6 +66,7 @@ var Scanner = {
 
     this.currentToken = this._next;
 
+    var lastOfLine = false;
     while (line.length === 0) {
       var c = '';
       while (c !== '\n' && c !== null) {
@@ -74,6 +75,8 @@ var Scanner = {
         c = (c) ? c.toString() : c;
       }
       lineNumber++;
+
+      lastOfLine = (c === '\n');
 
       if (c === null) {
         if (!endOfFile) {
@@ -86,80 +89,101 @@ var Scanner = {
         }
       }
 
+      // Strip out multi-line comments
+      if (line.indexOf('/*') > -1) {
+        var split = line.split('/*'),
+            comment = (split[1] || '  ').split('');
+        line = split[0];
+        while (comment.join('') !== '*/') {
+          comment.shift();
+          c = stream.read(1);
+          if (!c) {
+            throw new Error('Unterminated multi-comment comment');
+          }
+          c = c.toString();
+          if (c === '\n') {
+            lineNumber++;
+          }
+
+          comment.push(c);
+        }
+      }
+
       // Strip starting whitespace and comments
       line = line.split('//')[0];
       line = line.replace(/^[\s]+/, '');
     }
 
-    // Need it for checking against identifiers
-    var keywordsPattern = /^(atoi|else|false|if|itoa|main|read|rtn|true|while|write)/;
+    var tokenLineNumber = (lastOfLine) ? lineNumber - 1 : lineNumber,
 
-    var patterns = [
-      {
-        type: TokenTypes.NUMBER,
-        pattern: /^([-+]?([1-9][0-9]+|[0-9]))/
-      },
-      {
-        type: TokenTypes.CHARACTER,
-        pattern: /^'(\\[\x20-\x7E]|[\x20-\x7E]|[\x00-\x1F])'/
-      },
-      {
-        type: TokenTypes.IDENTIFIER,
-        pattern: /^([a-zA-Z_][a-zA-Z0-9_]*)/,
-        createToken: function(input) {
-          var keywordMatch = input.match(keywordsPattern);
-          if (keywordMatch && keywordMatch[0].length === input.length) {
-            return {
-              type: TokenTypes.KEYWORD,
-              lexeme: input
-            };
-          } else {
-            return {
-              type: TokenTypes.IDENTIFIER,
-              lexeme: input
-            };
+        // Need it for checking against identifiers
+        keywordsPattern = /^(atoi|else|false|if|itoa|main|read|rtn|true|while|write)/,
+        patterns = [
+          {
+            type: TokenTypes.NUMBER,
+            pattern: /^([-+]?([1-9][0-9]+|[0-9]))/
+          },
+          {
+            type: TokenTypes.CHARACTER,
+            pattern: /^'(\\[\x20-\x7E]|[\x20-\x7E]|[\x00-\x1F])'/
+          },
+          {
+            type: TokenTypes.IDENTIFIER,
+            pattern: /^([a-zA-Z_][a-zA-Z0-9_]*)/,
+            createToken: function(input) {
+              var keywordMatch = input.match(keywordsPattern);
+              if (keywordMatch && keywordMatch[0].length === input.length) {
+                return {
+                  type: TokenTypes.KEYWORD,
+                  lexeme: input
+                };
+              } else {
+                return {
+                  type: TokenTypes.IDENTIFIER,
+                  lexeme: input
+                };
+              }
+            }
+          },
+          {
+            type: TokenTypes.KEYWORD,
+            pattern: keywordsPattern
+          },
+          {
+            type: TokenTypes.ARROW,
+            pattern: /^(=>)/
+          },
+          {
+            type: TokenTypes.PUNCTUATION,
+            pattern: /^(;|,|\.)/
+          },
+          {
+            type: TokenTypes.MATH,
+            pattern: /^(\+|-|\*|\/|\^)/
+          },
+          {
+            type: TokenTypes.RELATIONAL,
+            pattern: /^(<=|>=|==|<|>)/
+          },
+          {
+            type: TokenTypes.BOOLEAN,
+            pattern: /^(&&|\|\||!=)/
+          },
+          {
+            type: TokenTypes.ASSIGNMENT,
+            pattern: /^(=)/
+          },
+          {
+            type: TokenTypes.BLOCK,
+            pattern: /^({|})/
+          },
+          {
+            type: TokenTypes.PARENTHESES,
+            pattern: /^(\(|\))/
           }
-        }
-      },
-      {
-        type: TokenTypes.KEYWORD,
-        pattern: keywordsPattern
-      },
-      {
-        type: TokenTypes.ARROW,
-        pattern: /^(=>)/
-      },
-      {
-        type: TokenTypes.PUNCTUATION,
-        pattern: /^(;|,|\.)/
-      },
-      {
-        type: TokenTypes.MATH,
-        pattern: /^(\+|-|\*|\/|\^)/
-      },
-      {
-        type: TokenTypes.RELATIONAL,
-        pattern: /^(<=|>=|==|<|>)/
-      },
-      {
-        type: TokenTypes.BOOLEAN,
-        pattern: /^(&&|\|\||!=)/
-      },
-      {
-        type: TokenTypes.ASSIGNMENT,
-        pattern: /^(=)/
-      },
-      {
-        type: TokenTypes.BLOCK,
-        pattern: /^({|})/
-      },
-      {
-        type: TokenTypes.PARENTHESES,
-        pattern: /^(\(|\))/
-      }
-    ],
-    matches = null,
-    i, len;
+      ],
+      matches = null,
+      i, len;
 
     len = patterns.length;
     for (i = 0; i < len; i++) {
@@ -187,7 +211,7 @@ var Scanner = {
       line = line.substr(1).replace(/^[\s]+/, '');
     }
 
-    this._next.lineNumber = lineNumber;
+    this._next.lineNumber = tokenLineNumber;
     return this.currentToken;
   }
 };
