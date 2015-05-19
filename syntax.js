@@ -83,7 +83,8 @@ var Syntax = {
    */
   variable_declaration: function(depthCheck) {
     if (depthCheck) {
-      return tokens.currentToken.type === TokenTypes.IDENTIFIER ||
+      var next = tokens.peek().lexeme;
+      return (tokens.currentToken.type === TokenTypes.IDENTIFIER && next.lexeme === '=') ||
              this.fn_declaration(true);
     }
 
@@ -106,7 +107,8 @@ var Syntax = {
    */
   fn_declaration: function(depthCheck) {
     if (depthCheck) {
-      return tokens.currentToken.type === TokenTypes.IDENTIFIER;
+      var next = tokens.peek().lexeme;
+      return tokens.currentToken.type === TokenTypes.IDENTIFIER && next === '=>';
     }
 
     checkTokenType(TokenTypes.IDENTIFIER);
@@ -327,17 +329,35 @@ var Syntax = {
   },
 
   /**
-   * expression { "," expression }
+   * argument { "," argument }
    */
   arg_list: function(depthCheck) {
     if (depthCheck) {
-      return this.expression(true);
+      return this.argument(true);
     }
 
-    this.expression();
+    this.argument();
     while (tokens.currentToken.lexeme === ',') {
       checkLexeme(',');
+      this.argument();
+    }
+  },
+
+  /**
+   * lambda
+   * expression
+   */
+  argument: function(depthCheck) {
+    if (depthCheck) {
+      return this.lambda(true) || this.expression(true);
+    }
+
+    if (this.lambda(true)) {
+      this.lambda();
+    } else if (this.expression(true)) {
       this.expression();
+    } else {
+      throw new Error('Expected lambda or expression, found ' + tokens.currentToken.lexeme);
     }
   }
 };
