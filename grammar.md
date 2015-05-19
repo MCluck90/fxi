@@ -85,7 +85,7 @@ statement ::= "{" { statement } "}"
   | expression ";"
   | "if" "(" expression ")" statement [ "else" statement ]
   | "while" "(" expression ")" statement
-  | "rtn" [ expression ] ";"
+  | "rtn" [ lambda | expression ] ";"
   | "write" expression ";"
   | "read" identifier ";"
   ;
