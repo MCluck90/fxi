@@ -4,6 +4,7 @@ var path = require('path'),
     argv = require('minimist')(process.argv.slice(2)),
     Scanner = require('./scanner.js'),
     Syntax = require('./syntax.js'),
+    SymbolTable = require('./symbol-table.js'),
     filename = argv._[0];
 
 Scanner.init(path.join(process.cwd(), filename), function() {
@@ -14,4 +15,6 @@ Scanner.init(path.join(process.cwd(), filename), function() {
     e.message = 'Line ' + token.lineNumber + ': ' + e.message;
     throw e;
   }
+
+  SymbolTable().print();
 });

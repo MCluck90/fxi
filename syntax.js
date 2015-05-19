@@ -1,7 +1,13 @@
 'use strict';
 
-var tokens = require('./scanner.js'),
-    TokenTypes = tokens.TokenTypes;
+var Symbol = require('./symbol.js'),
+    SymbolTable = require('./symbol-table.js'),
+    SymbolTypes = SymbolTable.SymbolTypes,
+    tokens = require('./scanner.js'),
+    TokenTypes = tokens.TokenTypes,
+
+    // If set to a string, contains next functions name
+    fnName = null;
 
 /**
  * Verify that the current token matches the given lexeme
@@ -73,6 +79,7 @@ var Syntax = {
       this.fn_declaration();
     }
 
+    fnName = 'main';
     checkLexeme('main');
     this.lambda();
   },
@@ -84,12 +91,17 @@ var Syntax = {
   variable_declaration: function(depthCheck) {
     if (depthCheck) {
       var next = tokens.peek().lexeme;
-      return (tokens.currentToken.type === TokenTypes.IDENTIFIER && next.lexeme === '=') ||
+      return (tokens.currentToken.type === TokenTypes.IDENTIFIER && next === '=') ||
              this.fn_declaration(true);
     }
 
     var nextToken = tokens.peek();
     if (nextToken.type === TokenTypes.ASSIGNMENT) {
+      var identifier = tokens.currentToken.lexeme;
+      SymbolTable().addSymbol(new Symbol({
+        type: SymbolTypes.LocalVar,
+        value: identifier
+      }));
       checkTokenType(TokenTypes.IDENTIFIER);
       checkLexeme('=');
       this.expression();
@@ -111,6 +123,7 @@ var Syntax = {
       return tokens.currentToken.type === TokenTypes.IDENTIFIER && next === '=>';
     }
 
+    fnName = tokens.currentToken.lexeme;
     checkTokenType(TokenTypes.IDENTIFIER);
     this.lambda();
   },
@@ -123,6 +136,17 @@ var Syntax = {
       return tokens.currentToken.type === TokenTypes.ARROW;
     }
 
+    var symbol = new Symbol({
+      type: SymbolTypes.Lambda
+    });
+    if (fnName) {
+      symbol.type = SymbolTypes.Fn;
+      symbol.value = fnName;
+      fnName = false;
+    }
+
+    symbol = SymbolTable().addSymbol(symbol);
+    SymbolTable().setScope(symbol);
     checkLexeme('=>');
     checkLexeme('(');
     while (this.parameter_list(true)) {
@@ -135,6 +159,7 @@ var Syntax = {
     }
     // statement
     checkLexeme('}');
+    SymbolTable().exitScope();
   },
 
   /**
@@ -145,9 +170,17 @@ var Syntax = {
       return tokens.currentToken.type === TokenTypes.IDENTIFIER;
     }
 
+    SymbolTable().addSymbol(new Symbol({
+      type: SymbolTypes.Param,
+      value: tokens.currentToken.lexeme
+    }));
     checkTokenType(TokenTypes.IDENTIFIER);
     while (tokens.currentToken.lexeme === ',') {
       checkLexeme(',');
+      SymbolTable().addSymbol(new Symbol({
+        type: SymbolTypes.Param,
+        value: tokens.currentToken.lexeme
+      }));
       checkTokenType(TokenTypes.IDENTIFIER);
     }
   },
@@ -158,6 +191,7 @@ var Syntax = {
    * expression ";"
    * "if" "(" expression ")" statement [ "else" statement ]
    * "while" "(" expression ")" statement
+   * "rtn" lambda
    * "rtn" [ expression ] ";"
    * "write" expression ";"
    * "read" expression ";"
@@ -203,10 +237,14 @@ var Syntax = {
       this.statement();
     } else if (lexeme === 'rtn') {
       checkLexeme('rtn');
-      if (this.expression(true)) {
-        this.expression();
+      if (this.lambda(true)) {
+        this.lambda();
+      } else {
+        if (this.expression(true)) {
+          this.expression();
+        }
+        checkLexeme(';');
       }
-      checkLexeme(';');
     } else if (lexeme === 'write') {
       checkLexeme('write');
       this.expression();
@@ -267,6 +305,12 @@ var Syntax = {
       this.expression();
       checkLexeme(')');
     } else if (token.type === TokenTypes.IDENTIFIER) {
+      // Look for a free variable
+      var identifier = tokens.currentToken.lexeme;
+      SymbolTable().addSymbol(new Symbol({
+        type: SymbolTypes.FreeVar,
+        value: identifier
+      }));
       checkTokenType(TokenTypes.IDENTIFIER);
       if (this.fn_call(true)) {
         this.fn_call();
