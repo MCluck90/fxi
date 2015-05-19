@@ -122,6 +122,10 @@ exp_z ::= "=" expression
 fn_call ::= "(" [ arg_list ] ")"
   ;
 
-arg_list ::= expression { "," expression }
+arg_list ::= argument { "," argument }
+  ;
+
+argument ::= lambda
+  | expression
   ;
 ```
