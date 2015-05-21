@@ -3,6 +3,7 @@
 var Symbol = require('./symbol.js'),
     SymbolTable = require('./symbol-table.js'),
     SymbolTypes = SymbolTable.SymbolTypes,
+    Semantics = require('./semantics.js'),
     tokens = require('./scanner.js'),
     TokenTypes = tokens.TokenTypes,
 
@@ -68,6 +69,14 @@ function checkTokenType(type) {
 
 var Syntax = {
   checkSyntax: function() {
+    SymbolTable().enabled = true;
+    Semantics.enabled = false;
+    this.program();
+  },
+
+  checkSemantics: function() {
+    SymbolTable().enabled = false;
+    Semantics.enabled = true;
     this.program();
   },
 
@@ -114,6 +123,7 @@ var Syntax = {
         type: SymbolTypes.LocalVar,
         value: tokens.currentToken.lexeme
       }));
+      Semantics.iPush(variable.value);
       checkTokenType(TokenTypes.IDENTIFIER);
       if (this.type_declaration(true)) {
         this.type_declaration(false, variable);
@@ -175,6 +185,7 @@ var Syntax = {
     }
 
     symbol = SymbolTable().addSymbol(symbol);
+    Semantics.iPush(symbol.value);
     SymbolTable().setScope(symbol);
     checkLexeme('=>');
     checkLexeme('(');
@@ -196,7 +207,7 @@ var Syntax = {
    */
   parameter_list: function(depthCheck) {
     if (depthCheck) {
-      return tokens.currentToken.type === TokenTypes.IDENTIFIER;
+      return this.parameter(true);
     }
 
     this.parameter();
@@ -218,6 +229,7 @@ var Syntax = {
       type: SymbolTypes.Param,
       value: tokens.currentToken.lexeme
     }));
+    Semantics.iPush(param.value);
     checkTokenType(TokenTypes.IDENTIFIER);
     if (this.type_declaration(true)) {
       this.type_declaration(false, param);
@@ -290,6 +302,7 @@ var Syntax = {
       checkLexeme(';');
     } else if (lexeme === 'read') {
       checkLexeme('read');
+      Semantics.iPush(tokens.currentToken.lexeme);
       checkTokenType(TokenTypes.IDENTIFIER);
       checkLexeme(';');
     } else {
@@ -350,6 +363,7 @@ var Syntax = {
         type: SymbolTypes.FreeVar,
         value: identifier
       }));
+      Semantics.iPush(identifier);
       checkTokenType(TokenTypes.IDENTIFIER);
       if (this.fn_call(true)) {
         this.fn_call();
