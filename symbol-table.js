@@ -170,6 +170,7 @@ SymbolTable.prototype = {
    */
   exitScope: function() {
     if (currentScope._parent) {
+      currentScope._lambdaCount = 0;
       currentScope = currentScope._parent;
       return true;
     }
