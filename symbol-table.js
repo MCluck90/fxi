@@ -250,6 +250,9 @@ SymbolTable.prototype = {
         freeVar.data.isFreeVar = true;
         symbol.type = SymbolTypes.FreeVar;
         symbol.data.original = freeVar;
+        if (freeVar.data.type) {
+          symbol.data.type = freeVar.data.type;
+        }
       }
     }
 
