@@ -13,7 +13,7 @@ var TokenTypes = {};
   'PUNCTUATION', 'IDENTIFIER',  'MATH',
   'RELATIONAL',  'BOOLEAN',     'ASSIGNMENT',
   'BLOCK',       'PARENTHESES', 'ARROW',
-  'UNKNOWN',     'EOF'].forEach(function(type) {
+  'TYPE',        'UNKNOWN',     'EOF'].forEach(function(type) {
   TokenTypes[type] = type;
 });
 EOF_TOKEN.type = TokenTypes.EOF;
@@ -126,6 +126,10 @@ var Scanner = {
           {
             type: TokenTypes.CHARACTER,
             pattern: /^'(\\[\x20-\x7E]|[\x20-\x7E]|[\x00-\x1F])'/
+          },
+          {
+            type: TokenTypes.TYPE,
+            pattern: /^(bool|char|int)/
           },
           {
             type: TokenTypes.IDENTIFIER,

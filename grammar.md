@@ -51,6 +51,11 @@ number_z ::= "0"
   | "8"
   | "9"
   ;
+
+type ::= "bool"
+  | "int"
+  | "char"
+  ;
 ```
 
 ## Start
@@ -63,17 +68,23 @@ program ::= { fn_declaration } "main" lambda
 ## Declarations
 
 ```
-variable_declaration ::= identifier "=" expression ";"
+variable_declaration ::= identifier [ type_declaration ] "=" expression ";"
   | fn_declaration
   ;
 
 fn_declaration ::= identifier lambda
   ;
 
+type_declaration ::= "<" type ">"
+  ;
+
 lambda ::= "=>" "(" [ parameter_list ] ")" "{" { statement } "}"
   ;
 
-parameter_list ::= identifier { "," identifier }
+parameter_list ::= parameter { "," parameter }
+  ;
+
+parameter ::= identifier [ type_declaration ]
   ;
 ```
 

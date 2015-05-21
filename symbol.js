@@ -9,6 +9,7 @@ function Symbol(options) {
     this[key] = options[key];
   }
   this.data = this.data || {};
+  this.data.type = this.data.type || null;
 }
 
 module.exports = Symbol;

@@ -85,24 +85,39 @@ var Syntax = {
   },
 
   /**
-   * identifier "=" expression ";"
+   * "bool"
+   * "char"
+   * "int"
+   */
+  type: function(depthCheck) {
+    if (depthCheck) {
+      return tokens.currentToken.type === TokenTypes.TYPE;
+    }
+
+    checkTokenType(TokenTypes.TYPE);
+  },
+
+  /**
+   * identifier [ type_declaration ] "=" expression ";"
    * fn_declaration
    */
   variable_declaration: function(depthCheck) {
+    var nextToken = tokens.peek(),
+        isAssignmentOrType = (nextToken.lexeme === '=' || nextToken.lexeme === '<');
     if (depthCheck) {
-      var next = tokens.peek().lexeme;
-      return (tokens.currentToken.type === TokenTypes.IDENTIFIER && next === '=') ||
+      return (tokens.currentToken.type === TokenTypes.IDENTIFIER && isAssignmentOrType) ||
              this.fn_declaration(true);
     }
 
-    var nextToken = tokens.peek();
-    if (nextToken.type === TokenTypes.ASSIGNMENT) {
-      var identifier = tokens.currentToken.lexeme;
-      SymbolTable().addSymbol(new Symbol({
+    if (isAssignmentOrType) {
+      var variable = SymbolTable().addSymbol(new Symbol({
         type: SymbolTypes.LocalVar,
-        value: identifier
+        value: tokens.currentToken.lexeme
       }));
       checkTokenType(TokenTypes.IDENTIFIER);
+      if (this.type_declaration(true)) {
+        this.type_declaration(false, variable);
+      }
       checkLexeme('=');
       this.expression();
       checkLexeme(';');
@@ -126,6 +141,20 @@ var Syntax = {
     fnName = tokens.currentToken.lexeme;
     checkTokenType(TokenTypes.IDENTIFIER);
     this.lambda();
+  },
+
+  /**
+   * "<" type ">"
+   */
+  type_declaration: function(depthCheck, symbol) {
+    if (depthCheck) {
+      return tokens.currentToken.lexeme === '<';
+    }
+
+    checkLexeme('<');
+    symbol.data.type = tokens.currentToken.lexeme;
+    this.type();
+    checkLexeme('>');
   },
 
   /**
@@ -163,25 +192,39 @@ var Syntax = {
   },
 
   /**
-   * identifier { "," identifier }
+   * parameter { "," parameter }
    */
   parameter_list: function(depthCheck) {
     if (depthCheck) {
       return tokens.currentToken.type === TokenTypes.IDENTIFIER;
     }
 
-    SymbolTable().addSymbol(new Symbol({
-      type: SymbolTypes.Param,
-      value: tokens.currentToken.lexeme
-    }));
-    checkTokenType(TokenTypes.IDENTIFIER);
+    this.parameter();
     while (tokens.currentToken.lexeme === ',') {
       checkLexeme(',');
       SymbolTable().addSymbol(new Symbol({
         type: SymbolTypes.Param,
         value: tokens.currentToken.lexeme
       }));
-      checkTokenType(TokenTypes.IDENTIFIER);
+      this.parameter();
+    }
+  },
+
+  /**
+   * identifier [ type_declaration ]
+   */
+  parameter: function(depthCheck) {
+    if (depthCheck) {
+      return tokens.currentToken.type === TokenTypes.IDENTIFIER;
+    }
+
+    var param = SymbolTable().addSymbol(new Symbol({
+      type: SymbolTypes.Param,
+      value: tokens.currentToken.lexeme
+    }));
+    checkTokenType(TokenTypes.IDENTIFIER);
+    if (this.type_declaration(true)) {
+      this.type_declaration(false, param);
     }
   },
 
