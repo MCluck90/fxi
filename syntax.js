@@ -202,10 +202,6 @@ var Syntax = {
     this.parameter();
     while (tokens.currentToken.lexeme === ',') {
       checkLexeme(',');
-      SymbolTable().addSymbol(new Symbol({
-        type: SymbolTypes.Param,
-        value: tokens.currentToken.lexeme
-      }));
       this.parameter();
     }
   },
