@@ -339,12 +339,25 @@ var Syntax = {
       this.expression();
       checkLexeme(')');
     } else if (lexeme === 'true') {
+      Semantics.lPush('bool', 'true');
       checkLexeme('true');
     } else if (lexeme === 'false') {
+      Semantics.lPush('bool', 'false');
       checkLexeme('false');
     } else if (token.type === TokenTypes.NUMBER) {
+      var number = new Symbol({
+        type: SymbolTypes.NumberLiteral,
+        value: tokens.currentToken.lexeme
+      });
+      SymbolTable().addLiteral(number);
+      Semantics.lPush('int', number.value);
       checkTokenType(TokenTypes.NUMBER);
     } else if (token.type === TokenTypes.CHARACTER) {
+      var character = SymbolTable().addLiteral(new Symbol({
+        type: SymbolTypes.CharacterLiteral,
+        value: tokens.currentToken.lexeme
+      }));
+      Semantics.lPush('char', character.value);
       checkTokenType(TokenTypes.CHARACTER);
     } else if (lexeme === 'atoi') {
       checkLexeme('atoi');
