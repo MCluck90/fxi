@@ -416,6 +416,7 @@ var Syntax = {
     }
 
     if (isCorrectType) {
+      Semantics.oPush(tokens.currentToken.lexeme);
       tokens.nextToken();
       this.expression();
     } else {
