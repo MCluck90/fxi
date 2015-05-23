@@ -258,7 +258,7 @@ SymbolTable.prototype = {
     }
 
     symbol.scope = currentScope;
-    if (this._symbols[symbol.value]) {
+    if (symbol.type === SymbolTypes.Fn && this._symbols[symbol.value]) {
       symbol.isDuplicate = true;
     }
     this._symbols[symbol.value] = symbol;
@@ -279,6 +279,9 @@ SymbolTable.prototype = {
    */
   addLiteral: function(symbol) {
     symbol.value = symbol.value.toString();
+    if (symbol.type === SymbolTypes.CharacterLiteral) {
+      symbol.value = '\'' + symbol.value + '\'';
+    }
     var existingLiteral = this.findLiteral(symbol.value);
     if (existingLiteral) {
       return existingLiteral;
@@ -309,7 +312,7 @@ SymbolTable.prototype = {
     value = value.toString();
     var globalScope = this.getGlobal(),
         symbol = globalScope._symbols[value];
-    if (isLiteral(symbol)) {
+    if (symbol && isLiteral(symbol)) {
       return symbol;
     }
     return null;
