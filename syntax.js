@@ -129,6 +129,7 @@ var Syntax = {
         this.type_declaration(false, variable);
       }
       checkLexeme('=');
+      Semantics.oPush('=');
       this.expression();
       checkLexeme(';');
       Semantics.EOE();

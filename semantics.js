@@ -178,6 +178,22 @@ var Semantics = {
   },
 
   /**
+   * Performs an assignment
+   */
+  '=': function() {
+    if (!this.enabled) {
+      return;
+    }
+
+    var rhs = Stack.action.pop(),
+        lhs = Stack.action.pop();
+
+    if (rhs.type !== null) {
+      inferType(lhs, rhs.type);
+    }
+  },
+
+  /**
    * End of expression
    * @param {bool} [force=true] If true, clear the action stack
    */
