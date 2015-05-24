@@ -131,6 +131,7 @@ var Syntax = {
       checkLexeme('=');
       this.expression();
       checkLexeme(';');
+      Semantics.EOE();
     } else if (nextToken.type === TokenTypes.ARROW) {
       this.fn_declaration();
     } else {
@@ -269,6 +270,7 @@ var Syntax = {
       this.variable_declaration();
     } else if (this.expression(true)) {
       this.expression();
+      Semantics.EOE();
       checkLexeme(';');
     } else if (lexeme === 'if') {
       checkLexeme('if');
@@ -290,9 +292,13 @@ var Syntax = {
       checkLexeme('rtn');
       if (this.lambda(true)) {
         this.lambda();
+        Semantics.EOE(false);
       } else {
         if (this.expression(true)) {
           this.expression();
+          Semantics.EOE(false);
+        } else {
+          Semantics.EOE();
         }
         checkLexeme(';');
       }

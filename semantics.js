@@ -5,6 +5,26 @@ var Stack = require('./semantic-stack.js'),
     SymbolTypes = SymbolTable.SymbolTypes,
     SAR = require('./sars/index.js');
 
+/**
+ * Performs a type check on the symbol and saves
+ * the type of the symbol if one has not been set
+ * @param {SAR}     sar   Semantic action record
+ * @param {string}  type  Expected type
+ */
+function inferType(sar, type) {
+  if (sar.type === type) {
+    return;
+  } else if (sar.type !== null) {
+    throw new Error('Expected value of type ' + type + ', found ' + sar.type);
+  } else if (!sar.ID) {
+    console.error(sar);
+    throw new Error('Cannot save inferred type');
+  }
+
+  sar.type = type;
+  SymbolTable.getSymbol(sar.ID).data.type = type;
+}
+
 var Semantics = {
   enabled: false,
 
@@ -77,10 +97,108 @@ var Semantics = {
       var precedence = findPrecedence(operator);
       while (Stack.operator.top && findPrecedence(Stack.operator.top) <= precedence) {
         var op = Stack.operator.pop();
-        Semantics[op]();
+        try {
+          Semantics[op]();
+        } catch(e) {
+          if (e.message === 'undefined is not a function') {
+            e.message = op + ' is not yet implemented';
+          }
+          throw e;
+        }
       }
 
       Stack.operator.push(operator);
+    }
+  },
+
+  /***************
+   *  OPERATORS  *
+   ***************/
+
+  /**
+   * Helper for performing what every
+   * mathematical semantic action does
+   */
+  _mathOperation: function() {
+    var a = Stack.action.pop(),
+        b = Stack.action.pop();
+
+    inferType(a, 'int');
+    inferType(b, 'int');
+    Stack.action.push(new SAR.Temp('int'));
+
+    return {
+      a: a,
+      b: b
+    };
+  },
+
+  /**
+   * Addition
+   */
+  '+': function() {
+    if (!this.enabled) {
+      return;
+    }
+
+    this._mathOperation();
+  },
+
+  /**
+   * Subtraction
+   */
+  '-': function() {
+    if (!this.enabled) {
+      return;
+    }
+
+    this._mathOperation();
+  },
+
+  /**
+   * Multiplication
+   */
+  '*': function() {
+    if (!this.enabled) {
+      return;
+    }
+
+    this._mathOperation();
+  },
+
+  /**
+   * Division
+   */
+  '/': function() {
+    if (!this.enabled) {
+      return;
+    }
+
+    this._mathOperation();
+  },
+
+  /**
+   * End of expression
+   * @param {bool} [force=true] If true, clear the action stack
+   */
+  EOE: function(force) {
+    if (!this.enabled) {
+      return;
+    }
+
+    if (force === undefined) {
+      force = true;
+    }
+
+    while (Stack.operator.length) {
+      var op = Stack.operator.pop();
+      Semantics[op]();
+    }
+
+    if (force) {
+      while (Stack.action.length) {
+        Stack.action.pop();
+      }
     }
   }
 };

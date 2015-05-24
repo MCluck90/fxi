@@ -211,7 +211,7 @@ SymbolTable.prototype = {
     }
 
     var isAnonymousFunction = (symbol.type === SymbolTypes.Lambda);
-    if (!this.enabled) {
+    if (!this.enabled && symbol.type !== SymbolTypes.Temp) {
       if (isAnonymousFunction) {
         var lambdaID = this._lambdaIDs[this._lambdaCount];
         if (!lambdaID) {
