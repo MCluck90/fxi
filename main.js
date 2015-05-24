@@ -5,16 +5,48 @@ var path = require('path'),
     Scanner = require('./scanner.js'),
     Syntax = require('./syntax.js'),
     SymbolTable = require('./symbol-table.js'),
-    filename = argv._[0];
+    filename = path.join(process.cwd(), argv._[0]),
+    _callbacks = [];
 
-Scanner.init(path.join(process.cwd(), filename), function() {
-  try {
-    Syntax.checkSyntax();
-  } catch(e) {
-    var token = Scanner.currentToken;
-    e.message = 'Line ' + token.lineNumber + ': ' + e.message;
-    throw e;
+function _then(cb) {
+  if (!cb) {
+    return {
+      then: _then
+    };
   }
 
+  if (typeof cb === 'string') {
+    _callbacks.push(runPass.bind(null, cb));
+  } else {
+    _callbacks.push(cb);
+  }
+  return {
+    then: _then
+  };
+}
+
+function runPass(passName) {
+  Scanner.init(filename, function() {
+    try {
+      Syntax['check' + passName]();
+    } catch(e) {
+      var token = Scanner.currentToken;
+      e.message = '\nPass: ' + passName + '\nLine ' + token.lineNumber + ': ' + e.message;
+      throw e;
+    }
+
+    if (_callbacks.length > 0) {
+      _callbacks.shift()();
+    }
+  });
+
+  return {
+    then: _then
+  };
+}
+
+runPass('Syntax')
+.then('Semantics')
+.then(function() {
   SymbolTable().print();
 });
