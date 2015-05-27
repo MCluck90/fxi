@@ -188,7 +188,9 @@ var Semantics = {
     var rhs = Stack.action.pop(),
         lhs = Stack.action.pop();
 
-    if (rhs.type !== null) {
+    if (lhs.type !== null) {
+      inferType(rhs, lhs.type);
+    } else if (rhs.type !== null) {
       inferType(lhs, rhs.type);
     }
   },

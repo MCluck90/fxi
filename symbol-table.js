@@ -33,21 +33,21 @@ typeToLetter[SymbolTypes.Temp]              = 'TE';
  * Generates built-in values and types
  */
 function createBuiltIns() {
-  SymbolTable().addLiteral({
+  currentScope.addLiteral(new Symbol({
     type: SymbolTypes.BooleanLiteral,
     value: 'true',
     data: {
       type: 'bool'
     }
-  });
+  }));
 
-  SymbolTable().addLiteral({
+  currentScope.addLiteral(new Symbol({
     type: SymbolTypes.BooleanLiteral,
     value: 'false',
     data: {
       type: 'bool'
     }
-  });
+  }));
 }
 
 /**
@@ -414,3 +414,5 @@ module.exports.SymbolTypes = SymbolTypes;
 module.exports.getSymbol = getSymbol;
 module.exports.isLiteral = isLiteral;
 module.exports.isType = isType;
+
+createBuiltIns();
