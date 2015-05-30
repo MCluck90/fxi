@@ -5,6 +5,11 @@ var Stack = {
   operator: []
 };
 
+Stack.clear = function() {
+  this.action = [];
+  this.operator = [];
+};
+
 Object.defineProperty(Stack.action, 'top', {
   get: function() {
     return Stack.action[Stack.action.length - 1];
