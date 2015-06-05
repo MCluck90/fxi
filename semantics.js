@@ -33,6 +33,22 @@ function inferType(sar, type) {
   SymbolTable.getSymbol(sar.ID).data.type = type;
 }
 
+/**
+ * Assigns a type to a symbol/SAR
+ * @param {SAR}     sar
+ * @param {string}  type
+ */
+function assignType(sar, type) {
+  sar.type = type;
+  var symbol;
+  if (sar.ID) {
+    symbol = SymbolTable.getSymbol(sar.ID);
+  } else {
+    symbol = SymbolTable().findSymbol(sar.identifier || sar.value);
+  }
+  symbol.data.type = type;
+}
+
 Semantics = {
   enabled: false,
 
@@ -241,6 +257,66 @@ Semantics = {
       while (Stack.action.length) {
         Stack.action.pop();
       }
+    }
+  },
+
+  /**********************
+   *  VAR DECLARATIONS  *
+   **********************/
+
+  Parameter: function() {
+    if (!this.enabled) {
+      return;
+    }
+
+    var parameter;
+    if (Stack.action.top instanceof SAR.Type) {
+      // Type declaration, assign it to the variable
+      var typeSar = Stack.action.pop();
+      parameter = Stack.action.pop();
+      assignType(parameter, typeSar.type);
+    } else {
+      parameter = Stack.action.pop();
+    }
+
+    // Only add parameters on initial type pass
+    if (this.onlyTypeInference) {
+      var fnSymbol = SymbolTable().symbol,
+          parameterSymbol = SymbolTable.getSymbol(parameter.ID);
+      fnSymbol.data.params = fnSymbol.data.params || [];
+      fnSymbol.data.params.push(parameterSymbol);
+    }
+  },
+
+  /********
+   *  IO  *
+   ********/
+
+  /**
+   * Write a value to standard out
+   */
+  Write: function() {
+    if (!this.enabled) {
+      return;
+    }
+
+    var expression = Stack.action.pop();
+    if (!expression.type) {
+      throwSemanticError(expression.identifier + ': Cannot write unknown type');
+    }
+  },
+
+  /**
+   * Reads in a value from standard in
+   */
+  Read: function() {
+    if (!this.enabled) {
+      return;
+    }
+
+    var expression = Stack.action.pop();
+    if (!expression.type) {
+      throwSemanticError(expression.identifier + ': Cannot read to unknown type');
     }
   }
 };

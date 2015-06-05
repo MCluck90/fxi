@@ -4,6 +4,7 @@ var Symbol = require('./symbol.js'),
     SymbolTable = require('./symbol-table.js'),
     SymbolTypes = SymbolTable.SymbolTypes,
     Semantics = require('./semantics.js'),
+    Stack = require('./semantic-stack.js'),
     tokens = require('./scanner.js'),
     TokenTypes = tokens.TokenTypes,
 
@@ -69,6 +70,7 @@ function checkTokenType(type) {
 
 var Syntax = {
   pass: function(name) {
+    Stack.clear();
     switch (name) {
       case 'syntax':
         SymbolTable().enabled = true;
@@ -205,7 +207,7 @@ var Syntax = {
     SymbolTable().setScope(symbol);
     checkLexeme('=>');
     checkLexeme('(');
-    while (this.parameter_list(true)) {
+    if (this.parameter_list(true)) {
       this.parameter_list();
     }
     checkLexeme(')');
@@ -250,6 +252,7 @@ var Syntax = {
     if (this.type_declaration(true)) {
       this.type_declaration(false);
     }
+    Semantics.Parameter();
   },
 
   /**
@@ -321,11 +324,13 @@ var Syntax = {
       checkLexeme('write');
       this.expression();
       checkLexeme(';');
+      Semantics.Write();
     } else if (lexeme === 'read') {
       checkLexeme('read');
       Semantics.iPush(tokens.currentToken.lexeme);
       checkTokenType(TokenTypes.IDENTIFIER);
       checkLexeme(';');
+      Semantics.Read();
     } else {
       throw new Error('Invalid statement');
     }
