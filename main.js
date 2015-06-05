@@ -28,7 +28,7 @@ function _then(cb) {
 function runPass(passName) {
   Scanner.init(filename, function() {
     try {
-      Syntax['check' + passName]();
+      Syntax.pass(passName);
     } catch(e) {
       var token = Scanner.currentToken;
       e.message = '\nPass: ' + passName + '\nLine ' + token.lineNumber + ': ' + e.message;
@@ -45,8 +45,9 @@ function runPass(passName) {
   };
 }
 
-runPass('Syntax')
-.then('Semantics')
+runPass('syntax')
+.then('type inference')
+.then('semantics')
 .then(function() {
   SymbolTable().print();
 });

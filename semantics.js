@@ -15,7 +15,7 @@ function inferType(sar, type) {
   if (sar.type === type) {
     return;
   } else if (sar.type !== null) {
-    throw new Error('Expected value of type ' + type + ', found ' + sar.type);
+    throwSemanticError('Expected value of type ' + type + ', found ' + sar.type);
   } else if (!sar.ID) {
     console.error(sar);
     throw new Error('Cannot save inferred type');
@@ -23,6 +23,14 @@ function inferType(sar, type) {
 
   sar.type = type;
   SymbolTable.getSymbol(sar.ID).data.type = type;
+}
+
+function throwSemanticError(message) {
+  if (Semantics.onlyTypeInference) {
+    return;
+  }
+
+  throw new Error(message);
 }
 
 var Semantics = {
@@ -57,7 +65,7 @@ var Semantics = {
 
     var symbol = SymbolTable().findLiteral(value);
     if (symbol === null) {
-      throw new Error('Unknown literal value: ' + type + ' ' + value);
+      throwSemanticError('Unknown literal value: ' + type + ' ' + value);
     }
     Stack.action.push(new SAR.Literal(type, value, symbol.ID));
   },

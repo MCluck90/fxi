@@ -68,15 +68,29 @@ function checkTokenType(type) {
 }
 
 var Syntax = {
-  checkSyntax: function() {
-    SymbolTable().enabled = true;
-    Semantics.enabled = false;
-    this.program();
-  },
+  pass: function(name) {
+    switch (name) {
+      case 'syntax':
+        SymbolTable().enabled = true;
+        Semantics.enabled = false;
+        break;
 
-  checkSemantics: function() {
-    SymbolTable().enabled = false;
-    Semantics.enabled = true;
+      case 'type inference':
+        SymbolTable().enabled = false;
+        Semantics.enabled = true;
+        Semantics.onlyTypeInference = true;
+        break;
+
+      case 'semantics':
+        SymbolTable().enabled = false;
+        Semantics.enabled = true;
+        Semantics.onlyTypeInference = false;
+        break;
+
+      default:
+        throw new Error('Unknown pass: ' + name);
+    }
+
     this.program();
   },
 
