@@ -6,8 +6,12 @@ var Stack = {
 };
 
 Stack.clear = function() {
-  this.action = [];
-  this.operator = [];
+  while (this.action.length) {
+    this.action.pop();
+  }
+  while (this.operator.length) {
+    this.operator.pop();
+  }
 };
 
 Object.defineProperty(Stack.action, 'top', {
