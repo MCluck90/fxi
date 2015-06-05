@@ -397,7 +397,16 @@ SymbolTable.prototype = {
               if (val instanceof Symbol) {
                 val = val.ID;
               }
-              console.log('    ' + dataKey + ': ' + val);
+              if (dataKey === 'params') {
+                console.log('    params:');
+                val.forEach(function(param) {
+                  console.log('      ' + param.value + ':');
+                  console.log('        ID: ' + param.ID);
+                  console.log('        type: ' + param.data.type);
+                });
+              } else {
+                console.log('    ' + dataKey + ': ' + val);
+              }
             });
           }
         } else {
