@@ -1,6 +1,7 @@
 'use strict';
 
-var Symbol = require('./symbol.js'),
+var ICode = require('./icode.js'),
+    Symbol = require('./symbol.js'),
     SymbolTable = require('./symbol-table.js'),
     SymbolTypes = SymbolTable.SymbolTypes,
     Semantics = require('./semantics.js'),
@@ -75,18 +76,22 @@ var Syntax = {
       case 'syntax':
         SymbolTable().enabled = true;
         Semantics.enabled = false;
+        ICode.enabled = false;
         break;
 
       case 'type inference':
         SymbolTable().enabled = false;
         Semantics.enabled = true;
         Semantics.onlyTypeInference = true;
+        ICode.enabled = false;
         break;
 
       case 'semantics':
         SymbolTable().enabled = false;
         Semantics.enabled = true;
         Semantics.onlyTypeInference = false;
+        ICode.enabled = true;
+        ICode._quads = [];
         break;
 
       default:
@@ -107,6 +112,7 @@ var Syntax = {
     fnName = 'main';
     checkLexeme('main');
     this.lambda();
+    ICode.Exit();
   },
 
   /**

@@ -1,6 +1,7 @@
 'use strict';
 
-var Stack = require('./semantic-stack.js'),
+var ICode = require('./icode.js'),
+    Stack = require('./semantic-stack.js'),
     SymbolTable = require('./symbol-table.js'),
     SAR = require('./sars/index.js'),
     Semantics;
@@ -304,6 +305,7 @@ Semantics = {
     if (!expression.type) {
       throwSemanticError(expression.identifier + ': Cannot write unknown type');
     }
+    ICode.Write(expression);
   },
 
   /**
