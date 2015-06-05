@@ -236,6 +236,14 @@ SymbolTable.prototype = {
       }
     }
 
+    var exists = currentScope.findSymbol(symbol.value);
+    if (exists) {
+      if (exists.type === SymbolTypes.Fn) {
+        exists.isDuplicate = true;
+      }
+      return exists;
+    }
+
     if (!symbol.ID) {
       symbol.ID = this.genSymID(symbol);
     }
@@ -247,7 +255,7 @@ SymbolTable.prototype = {
     } else if (symbol.type !== SymbolTypes.Param) {
       // It's a free variable, mark it as such
       freeVar = this.findSymbol(symbol.value);
-      if (freeVar) {
+      if (freeVar && freeVar.scope !== currentScope) {
         freeVar.data.isFreeVar = true;
         symbol.type = SymbolTypes.FreeVar;
         symbol.data.original = freeVar;
@@ -258,17 +266,16 @@ SymbolTable.prototype = {
     }
 
     symbol.scope = currentScope;
-    if (symbol.type === SymbolTypes.Fn && this._symbols[symbol.value]) {
-      symbol.isDuplicate = true;
-    }
-    this._symbols[symbol.value] = symbol;
-    allSymbols[symbol.ID] = symbol;
 
     // If it's a lambda, store it in a special place to be retrieved later
     if (symbol.type === SymbolTypes.Lambda) {
       this._lambdaIDs.push(symbol.ID);
       this._lambdaCount++;
     }
+
+    this._symbols[symbol.value] = symbol;
+    allSymbols[symbol.ID] = symbol;
+
     return symbol;
   },
 
