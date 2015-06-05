@@ -219,6 +219,19 @@ ICode = {
   quads: [],
 
   /**
+   * Provide a spot for initialization code
+   */
+  Init: function() {
+    if (!this.enabled) {
+      return;
+    }
+
+    pushQuad({
+      instruction: 'INIT'
+    });
+  },
+
+  /**
    * Write to standard output
    * @param {SAR} expression
    */
@@ -243,7 +256,6 @@ ICode = {
     }
 
     pushQuad({
-      comment: 'Exit the program',
       instruction: 'EXIT'
     });
   }

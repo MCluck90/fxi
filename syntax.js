@@ -105,6 +105,7 @@ var Syntax = {
    * { fn_declaration } "main" lambda
    */
   program: function() {
+    ICode.Init();
     while (this.fn_declaration(true)) {
       this.fn_declaration();
     }
