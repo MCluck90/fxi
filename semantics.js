@@ -2,8 +2,16 @@
 
 var Stack = require('./semantic-stack.js'),
     SymbolTable = require('./symbol-table.js'),
-    SymbolTypes = SymbolTable.SymbolTypes,
-    SAR = require('./sars/index.js');
+    SAR = require('./sars/index.js'),
+    Semantics;
+
+function throwSemanticError(message) {
+  if (Semantics.onlyTypeInference) {
+    return;
+  }
+
+  throw new Error(message);
+}
 
 /**
  * Performs a type check on the symbol and saves
@@ -25,16 +33,12 @@ function inferType(sar, type) {
   SymbolTable.getSymbol(sar.ID).data.type = type;
 }
 
-function throwSemanticError(message) {
-  if (Semantics.onlyTypeInference) {
-    return;
-  }
-
-  throw new Error(message);
-}
-
-var Semantics = {
+Semantics = {
   enabled: false,
+
+  /****************
+   *  SAR PUSHES  *
+   ****************/
 
   /**
    * Pushes an identifier on to the action stack
@@ -80,7 +84,7 @@ var Semantics = {
     }
 
     var precedenceSet = [
-      ['*',  '/',           ],
+      ['*',  '/'            ],
       ['+',  '-'            ],
       ['<',  '>', '<=', '>='],
       ['==', '!='           ],
@@ -117,6 +121,18 @@ var Semantics = {
 
       Stack.operator.push(operator);
     }
+  },
+
+  /**
+   * Pushes a type on to the action stack
+   * @param {string} type
+   */
+  tPush: function(type) {
+    if (!this.enabled) {
+      return;
+    }
+
+    Stack.action.push(new SAR.Type(type));
   },
 
   /***************

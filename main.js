@@ -8,6 +8,7 @@ var path = require('path'),
     filename = path.join(process.cwd(), argv._[0]),
     _callbacks = [];
 
+/* jshint latedef: false */
 function _then(cb) {
   if (!cb) {
     return {
@@ -44,6 +45,7 @@ function runPass(passName) {
     then: _then
   };
 }
+/* jshint latedef: true */
 
 runPass('syntax')
 .then('type inference')

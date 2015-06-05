@@ -2,5 +2,6 @@
 module.exports = {
   Identifier: require('./identifier.js'),
   Literal: require('./literal.js'),
-  Temp: require('./temp.js')
+  Temp: require('./temp.js'),
+  Type: require('./type.js')
 };

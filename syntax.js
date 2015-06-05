@@ -117,6 +117,7 @@ var Syntax = {
       return tokens.currentToken.type === TokenTypes.TYPE;
     }
 
+    Semantics.tPush(tokens.currentToken.lexeme);
     checkTokenType(TokenTypes.TYPE);
   },
 
@@ -140,7 +141,7 @@ var Syntax = {
       Semantics.iPush(variable.value);
       checkTokenType(TokenTypes.IDENTIFIER);
       if (this.type_declaration(true)) {
-        this.type_declaration(false, variable);
+        this.type_declaration(false);
       }
       checkLexeme('=');
       Semantics.oPush('=');
@@ -172,13 +173,12 @@ var Syntax = {
   /**
    * "<" type ">"
    */
-  type_declaration: function(depthCheck, symbol) {
+  type_declaration: function(depthCheck) {
     if (depthCheck) {
       return tokens.currentToken.lexeme === '<';
     }
 
     checkLexeme('<');
-    symbol.data.type = tokens.currentToken.lexeme;
     this.type();
     checkLexeme('>');
   },
@@ -248,7 +248,7 @@ var Syntax = {
     Semantics.iPush(param.value);
     checkTokenType(TokenTypes.IDENTIFIER);
     if (this.type_declaration(true)) {
-      this.type_declaration(false, param);
+      this.type_declaration(false);
     }
   },
 
