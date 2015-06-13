@@ -1,12 +1,19 @@
 'use strict';
 
-var path = require('path'),
+var fs = require('fs'),
+    path = require('path'),
     argv = require('minimist')(process.argv.slice(2)),
     Scanner = require('./scanner.js'),
     Syntax = require('./syntax.js'),
-    //SymbolTable = require('./symbol-table.js'),
-    filename = path.join(process.cwd(), argv._[0]),
+    SymbolTable = require('./symbol-table.js'),
+    filename = (argv._[0]) ? path.join(process.cwd(), argv._[0]) : null,
     _callbacks = [];
+
+if (!filename || argv.h || argv.help) {
+  var helpText = path.join(__dirname, 'help.txt');
+  console.log(fs.readFileSync(helpText).toString());
+  return;
+}
 
 /* jshint latedef: false */
 function _then(cb) {
@@ -52,6 +59,29 @@ runPass('syntax')
 .then('semantics')
 .then(function() {
   var ICode = require('./icode.js'),
-      TCode = require('./target/uvu.js');
-  console.log(TCode.compile(ICode.quads));
+      TCode = require('./target/uvu.js'),
+      outputICode = argv.i || argv.icode,
+      outputTCode = argv.o || argv.output,
+      icode = '',
+      targetCode = TCode.compile(ICode.quads);
+
+  if (outputICode) {
+    ICode.quads.forEach(function(quad) {
+      icode += quad.join('\t');
+    });
+
+    if (typeof outputICode === 'string') {
+      fs.writeFileSync(path.join(process.cwd(), outputICode), icode);
+    } else {
+      console.log(icode);
+    }
+  }
+
+  if (outputTCode) {
+    if (typeof outputTCode === 'string') {
+      fs.writeFileSync(path.join(process.cwd(), outputTCode), targetCode);
+    } else {
+      console.log(targetCode);
+    }
+  }
 });
