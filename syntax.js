@@ -380,7 +380,10 @@ var Syntax = {
     } else if (token.type === TokenTypes.NUMBER) {
       var number = new Symbol({
         type: SymbolTypes.NumberLiteral,
-        value: tokens.currentToken.lexeme
+        value: tokens.currentToken.lexeme,
+        data: {
+          type: 'int'
+        }
       });
       SymbolTable().addLiteral(number);
       Semantics.lPush('int', number.value);
@@ -388,7 +391,10 @@ var Syntax = {
     } else if (token.type === TokenTypes.CHARACTER) {
       var character = SymbolTable().addLiteral(new Symbol({
         type: SymbolTypes.CharacterLiteral,
-        value: tokens.currentToken.lexeme
+        value: tokens.currentToken.lexeme,
+        data: {
+          type: 'char'
+        }
       }));
       Semantics.lPush('char', character.value);
       checkTokenType(TokenTypes.CHARACTER);

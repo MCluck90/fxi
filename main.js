@@ -4,7 +4,7 @@ var path = require('path'),
     argv = require('minimist')(process.argv.slice(2)),
     Scanner = require('./scanner.js'),
     Syntax = require('./syntax.js'),
-    SymbolTable = require('./symbol-table.js'),
+    //SymbolTable = require('./symbol-table.js'),
     filename = path.join(process.cwd(), argv._[0]),
     _callbacks = [];
 
@@ -51,5 +51,7 @@ runPass('syntax')
 .then('type inference')
 .then('semantics')
 .then(function() {
-  SymbolTable().print();
+  var ICode = require('./icode.js'),
+      TCode = require('./target/uvu.js');
+  console.log(TCode.compile(ICode.quads));
 });
