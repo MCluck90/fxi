@@ -127,6 +127,9 @@ var UVU = {
   /*********
    *  I/O  *
    *********/
+  /**
+   * Writes a value to stdout
+   */
   WRITE: function(quad) {
     var dataType = quad.arg1,
         argID = quad.arg2,
