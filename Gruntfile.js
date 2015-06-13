@@ -13,18 +13,18 @@ module.exports = function(grunt) {
       },
       all: {
         files: {
-          src: ['./*.js', 'sars/*.js']
+          src: ['./*.js', 'sars/*.js', 'target/*.js']
         }
       }
     },
 
     jscs: {
-      all: ['*.js', 'sars/*.js']
+      all: ['*.js', 'sars/*.js', 'target/*.js']
     },
 
     watch: {
       all: {
-        files: ['*.js', 'sars/*.js'],
+        files: ['*.js', 'sars/*.js', 'target/*.js'],
         tasks: ['jshint:all', 'jscs:all']
       }
     }
