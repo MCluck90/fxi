@@ -212,6 +212,7 @@ var Syntax = {
     symbol = SymbolTable().addSymbol(symbol);
     Semantics.iPush(symbol.value);
     SymbolTable().setScope(symbol);
+    Semantics.sPush(symbol);
     checkLexeme('=>');
     checkLexeme('(');
     if (this.parameter_list(true)) {
@@ -225,6 +226,7 @@ var Syntax = {
     // statement
     checkLexeme('}');
     SymbolTable().exitScope();
+    Semantics.sPop();
   },
 
   /**

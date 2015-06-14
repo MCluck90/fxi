@@ -141,6 +141,47 @@ Semantics = {
   },
 
   /**
+   * Pushes a scope on to the scope stack
+   * @param {Symbol} symbol
+   */
+  sPush: function(symbol) {
+    if (!this.enabled) {
+      return;
+    }
+
+    Stack.scope.push(new SAR.Scope(symbol));
+  },
+
+  /**
+   * Pops off the most recent scope
+   */
+  sPop: function() {
+    if (!this.enabled) {
+      return;
+    }
+
+    var scope = Stack.scope.pop(),
+        symbol = scope.symbol,
+        returnType = scope.returnType,
+        params = scope.params;
+
+    if (!scope.type) {
+      // Determine a type string from the scope
+      var typeString = returnType + ' : (';
+      for (var i = 0, len = params.length; i < len; i++) {
+        if (i > 0) {
+          typeString += ', ';
+        }
+        typeString += params[i].data.type;
+      }
+      symbol.data.type = typeString;
+    }
+
+    symbol.data.returnType = returnType;
+    symbol.data.params = params;
+  },
+
+  /**
    * Pushes a type on to the action stack
    * @param {string} type
    */
