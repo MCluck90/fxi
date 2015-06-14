@@ -1,0 +1,13 @@
+Usage: fxi file [options]
+
+Compiles FXI files
+
+Options:
+
+  -h, --help                  Print this usage information
+  -i [file], --icode [file]   Saves intermediate code to file.
+                              Will print to stdout if a file
+                              is not given.
+  -o [file], --output [file]  Save output to a given file.
+                              Will print to stdout if a file
+                              is not given.
