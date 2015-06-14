@@ -32,6 +32,10 @@
 
   * Push a Type SAR on to the SAS.
 
+### #param - Parameter
+
+  * Added a parameter to the current scope.
+
 ### #BAL - Beginning of Argument List
 
   * Push a Beginning of Argument List SAR on to the SAS.
