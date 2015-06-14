@@ -282,6 +282,10 @@ SymbolTable.prototype = {
       this._lambdaCount++;
     }
 
+    if (isType(symbol, [SymbolTypes.Fn, SymbolTypes.Lambda]) && !symbol.data.params) {
+      symbol.data.params = [];
+    }
+
     this._symbols[symbol.value] = symbol;
     allSymbols[symbol.ID] = symbol;
 
