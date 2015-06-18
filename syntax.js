@@ -261,7 +261,7 @@ var Syntax = {
     if (this.type_declaration(true)) {
       this.type_declaration(false);
     }
-    Semantics.Parameter();
+    Semantics.param();
   },
 
   /**
@@ -333,14 +333,14 @@ var Syntax = {
       checkLexeme('write');
       this.expression();
       checkLexeme(';');
-      Semantics.Write();
+      Semantics.write();
     } else if (lexeme === 'read') {
       checkLexeme('read');
       Semantics.iPush(tokens.currentToken.lexeme);
       Semantics.iExist();
       checkTokenType(TokenTypes.IDENTIFIER);
       checkLexeme(';');
-      Semantics.Read();
+      Semantics.read();
     } else {
       throw new Error('Invalid statement');
     }
