@@ -31,7 +31,10 @@ function inferType(sar, type) {
   }
 
   sar.type = type;
-  SymbolTable.getSymbol(sar.ID).data.type = type;
+  var symbol = SymbolTable().findSymbol(sar.ID);
+  if (symbol) {
+    symbol.data.type = type;
+  }
 }
 
 /**
@@ -71,6 +74,18 @@ Semantics = {
       Stack.action.push(new SAR.Identifier(symbol));
     } else {
       Stack.action.push(new SAR.Identifier(identifier));
+    }
+  },
+
+  iExist: function() {
+    if (!this.enabled) {
+      return;
+    }
+
+    var identifier = Stack.action.top.identifier,
+        symbol = SymbolTable().findSymbol(identifier);
+    if (!symbol) {
+      throwSemanticError(identifier + ' does not exist in current scope');
     }
   },
 

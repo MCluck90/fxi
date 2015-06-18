@@ -337,6 +337,7 @@ var Syntax = {
     } else if (lexeme === 'read') {
       checkLexeme('read');
       Semantics.iPush(tokens.currentToken.lexeme);
+      Semantics.iExist();
       checkTokenType(TokenTypes.IDENTIFIER);
       checkLexeme(';');
       Semantics.Read();
@@ -418,6 +419,7 @@ var Syntax = {
         value: identifier
       }));
       Semantics.iPush(identifier);
+      Semantics.iExist();
       checkTokenType(TokenTypes.IDENTIFIER);
       if (this.fn_call(true)) {
         this.fn_call();
