@@ -77,6 +77,9 @@ Semantics = {
     }
   },
 
+  /**
+   * Determine if the identifier exists in the current scope
+   */
   iExist: function() {
     if (!this.enabled) {
       return;
@@ -187,8 +190,9 @@ Semantics = {
         if (i > 0) {
           typeString += ', ';
         }
-        typeString += params[i].data.type;
+        typeString += params[i].type;
       }
+      typeString += ')';
       symbol.data.type = typeString;
     }
 
@@ -218,8 +222,229 @@ Semantics = {
   },
 
   /***************
+   *  FUNCTIONS  *
+   ***************/
+
+  /**
+   * Add a parameter to the scope
+   */
+  param: function() {
+    if (!this.enabled) {
+      return;
+    }
+
+    var parameter;
+    if (Stack.action.top instanceof SAR.Type) {
+      // Type declaration, assign it to the variable
+      var typeSar = Stack.action.pop();
+      parameter = Stack.action.pop();
+      assignType(parameter, typeSar.type);
+    } else {
+      parameter = Stack.action.pop();
+    }
+
+    Stack.scope.top.push(parameter);
+
+    // Only add parameters on initial type pass
+    if (this.onlyTypeInference) {
+      var fnSymbol = SymbolTable().symbol,
+          parameterSymbol = SymbolTable.getSymbol(parameter.ID);
+      fnSymbol.data.params = fnSymbol.data.params || [];
+      fnSymbol.data.params.push(parameterSymbol);
+    }
+  },
+
+  /**
+   * Mark the beginning of an argument list
+   */
+  BAL: function() {
+    if (!this.enabled) {
+      return;
+    }
+
+    throw new Error('Not yet implemented');
+  },
+
+  /**
+   * Add an argument to the current argument list
+   */
+  ',': function() {
+    if (!this.enabled) {
+      return;
+    }
+
+    throw new Error('Not yet implemented');
+  },
+
+  /**
+   * Mark the end of an argument list
+   */
+  EAL: function() {
+    if (!this.enabled) {
+      return;
+    }
+
+    throw new Error('Not yet implemented');
+  },
+
+  /**
+   * Finish a function call
+   */
+  func: function() {
+    if (!this.enabled) {
+      return;
+    }
+
+    throw new Error('Not yet implemented');
+  },
+
+  /******************
+   *  FLOW CONTROL  *
+   ******************/
+
+  /**
+   * Verify that an expression is a bool
+   */
+  if: function() {
+    if (!this.enabled) {
+      return;
+    }
+
+    throw new Error('Not yet implemented');
+  },
+
+  /**
+   * Verify that an expression is a bool
+   */
+  while: function() {
+    if (!this.enabled) {
+      return;
+    }
+
+    throw new Error('Not yet implemented');
+  },
+
+  /**
+   * Evaluate the expression and
+   * make sure it matches the return type of the function
+   */
+  rtn: function() {
+    if (!this.enabled) {
+      return;
+    }
+
+    throw new Error('Not yet implemented');
+  },
+
+  /********
+   *  IO  *
+   ********/
+
+  /**
+   * Write a value to standard out
+   */
+  write: function() {
+    if (!this.enabled) {
+      return;
+    }
+
+    var expression = Stack.action.pop();
+    if (!expression.type) {
+      throwSemanticError(expression.identifier + ': Cannot write unknown type');
+    }
+    ICode.Write(expression);
+  },
+
+  /**
+   * Reads in a value from standard in
+   */
+  read: function() {
+    if (!this.enabled) {
+      return;
+    }
+
+    var expression = Stack.action.pop();
+    if (!expression.type) {
+      throwSemanticError(expression.identifier + ': Cannot read to unknown type');
+    }
+  },
+
+  /*****************
+   *  CONVERSIONS  *
+   *****************/
+
+  /**
+   * Verify an expression is a char
+   */
+  atoi: function() {
+    if (!this.enabled) {
+      return;
+    }
+
+    throw new Error('Not yet implemented');
+  },
+
+  /**
+   * Verify an expression is an integer
+   */
+  itoa: function() {
+    if (!this.enabled) {
+      return;
+    }
+
+    throw new Error('Not yet implemented');
+  },
+
+  /***************
    *  OPERATORS  *
    ***************/
+
+  /**
+   * Begin operator grouping
+   */
+  '(': function() {
+    if (!this.enabled) {
+      return;
+    }
+
+    throw new Error('Not yet implemented');
+  },
+
+  /**
+   * End operator grouping
+   */
+  ')': function() {
+    if (!this.enabled) {
+      return;
+    }
+
+    throw new Error('Not yet implemented');
+  },
+
+  /**
+   * End of expression
+   * @param {bool} [force=true] If true, clear the action stack
+   */
+  EOE: function(force) {
+    if (!this.enabled) {
+      return;
+    }
+
+    if (force === undefined) {
+      force = true;
+    }
+
+    while (Stack.operator.length) {
+      var op = Stack.operator.pop();
+      Semantics[op]();
+    }
+
+    if (force) {
+      while (Stack.action.length) {
+        Stack.action.pop();
+      }
+    }
+  },
 
   /**
    * Helper for performing what every
@@ -301,90 +526,96 @@ Semantics = {
     }
   },
 
-  /**
-   * End of expression
-   * @param {bool} [force=true] If true, clear the action stack
-   */
-  EOE: function(force) {
-    if (!this.enabled) {
-      return;
-    }
-
-    if (force === undefined) {
-      force = true;
-    }
-
-    while (Stack.operator.length) {
-      var op = Stack.operator.pop();
-      Semantics[op]();
-    }
-
-    if (force) {
-      while (Stack.action.length) {
-        Stack.action.pop();
-      }
-    }
-  },
-
   /**********************
-   *  VAR DECLARATIONS  *
+   * BOOLEAN OPERATORS  *
    **********************/
 
-  Parameter: function() {
-    if (!this.enabled) {
-      return;
-    }
-
-    var parameter;
-    if (Stack.action.top instanceof SAR.Type) {
-      // Type declaration, assign it to the variable
-      var typeSar = Stack.action.pop();
-      parameter = Stack.action.pop();
-      assignType(parameter, typeSar.type);
-    } else {
-      parameter = Stack.action.pop();
-    }
-
-    // Only add parameters on initial type pass
-    if (this.onlyTypeInference) {
-      var fnSymbol = SymbolTable().symbol,
-          parameterSymbol = SymbolTable.getSymbol(parameter.ID);
-      fnSymbol.data.params = fnSymbol.data.params || [];
-      fnSymbol.data.params.push(parameterSymbol);
-    }
-  },
-
-  /********
-   *  IO  *
-   ********/
-
   /**
-   * Write a value to standard out
+   * Verify both expressions are numbers
    */
-  Write: function() {
+  '<': function() {
     if (!this.enabled) {
       return;
     }
 
-    var expression = Stack.action.pop();
-    if (!expression.type) {
-      throwSemanticError(expression.identifier + ': Cannot write unknown type');
-    }
-    ICode.Write(expression);
+    throw new Error('Not yet implemented');
   },
 
   /**
-   * Reads in a value from standard in
+   * Verify both expressions are numbers
    */
-  Read: function() {
+  '>': function() {
     if (!this.enabled) {
       return;
     }
 
-    var expression = Stack.action.pop();
-    if (!expression.type) {
-      throwSemanticError(expression.identifier + ': Cannot read to unknown type');
+    throw new Error('Not yet implemented');
+  },
+
+  /**
+   * Verify both expressions are numbers
+   */
+  '<=': function() {
+    if (!this.enabled) {
+      return;
     }
+
+    throw new Error('Not yet implemented');
+  },
+
+  /**
+   * Verify both expressions are numbers
+   */
+  '>=': function() {
+    if (!this.enabled) {
+      return;
+    }
+
+    throw new Error('Not yet implemented');
+  },
+
+  /**
+   * Verify both expressions are booleans
+   */
+  '&&': function() {
+    if (!this.enabled) {
+      return;
+    }
+
+    throw new Error('Not yet implemented');
+  },
+
+  /**
+   * Verify both expressions are booleans
+   */
+  '||': function() {
+    if (!this.enabled) {
+      return;
+    }
+
+    throw new Error('Not yet implemented');
+  },
+
+  /**
+   * Verify both expressions are the same type
+   */
+  '==': function() {
+    if (!this.enabled) {
+      return;
+    }
+
+    throw new Error('Not yet implemented');
+  },
+
+  /**
+   * Verify both expressions are the same type
+   */
+  '!=': function() {
+    if (!this.enabled) {
+      return;
+    }
+
+    throw new Error('Not yet implemented');
   }
 };
 
