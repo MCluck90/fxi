@@ -10,7 +10,7 @@
 
 ### #iExist - Identifier exists
 
-  * Pop the top SAR from the SAS. Determine if the SAR exists in the current scope. Push the SAR back on to the SAS.
+  * Look at the Identifier SAR on the top of the SAS. Determine if the identifier exists in the current scope.
 
 ### #lPush - Literal Push
 

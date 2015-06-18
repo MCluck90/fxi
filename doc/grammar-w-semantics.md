@@ -99,7 +99,7 @@ statement ::= "{" { statement } "}"
   | "rtn" lambda #rtn
   | "rtn" [ expression ] ";" #rtn
   | "write" expression ";" #write
-  | "read" identifier #iPush ";" #read
+  | "read" identifier #iPush #iExist ";" #read
   ;
 ```
 
@@ -113,7 +113,7 @@ expression ::= "(" expression ")" [ exp_z ]
   | character_literal [ exp_z ]
   | "atoi" "(" expression ")" #atoi [ exp_z ]
   | "itoa" "(" expression ")" #itoa [ exp_z ]
-  | identifier #iPush [ fn_call ] [ exp_z ]
+  | identifier #iPush #iExist [ fn_call ] [ exp_z ]
   ;
 
 exp_z ::= "=" #oPush expression
