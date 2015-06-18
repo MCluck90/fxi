@@ -26,7 +26,7 @@
 
 ### #sPop - Scope Pop
 
-  * Pop a Scope SAR from the Scope Stack.
+  * Pop a Scope SAR from the Scope Stack. Push the lambda on to the SAS.
 
 ### #tPush - Type Push
 
@@ -34,7 +34,7 @@
 
 ### #param - Parameter
 
-  * Added a parameter to the current scope.
+  * Pop a SAR from the SAS. If the SAR is a Type SAR then pop again to get the Identifier SAR. Add the parameter to the top of the Scope Stack.
 
 ### #BAL - Beginning of Argument List
 
