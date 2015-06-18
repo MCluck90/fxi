@@ -94,8 +94,8 @@ parameter ::= identifier #iPush [ type_declaration ] #param
 statement ::= "{" { statement } "}"
   | variable_declaration
   | expression ";" #EOE
-  | "if" "(" expression ")" #if statement [ "else" statement ]
-  | "while" "(" expression ")" #while statement
+  | "if" "(" #oPush expression ")" #oPush #if statement [ "else" statement ]
+  | "while" "(" #oPush expression ")" #oPush #while statement
   | "rtn" lambda #rtn
   | "rtn" [ expression ] ";" #rtn
   | "write" expression ";" #write
@@ -107,12 +107,12 @@ statement ::= "{" { statement } "}"
 
 ```
 expression ::= "(" expression ")" [ exp_z ]
-  | "true" [ exp_z ]
-  | "false" [ exp_z ]
+  | "true" #lPush [ exp_z ]
+  | "false" #lPush [ exp_z ]
   | number_literal [ exp_z ]
   | character_literal [ exp_z ]
-  | "atoi" "(" expression ")" #atoi [ exp_z ]
-  | "itoa" "(" expression ")" #itoa [ exp_z ]
+  | "atoi" "(" #oPush expression ")" #oPush #atoi [ exp_z ]
+  | "itoa" "(" #oPush expression ")" #oPush #itoa [ exp_z ]
   | identifier #iPush #iExist [ fn_call ] [ exp_z ]
   ;
 
