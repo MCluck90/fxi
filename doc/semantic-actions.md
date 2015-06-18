@@ -30,7 +30,7 @@
 
 ### #tPush - Type Push
 
-  * Push a Type SAR on to the SAS.
+  * Check that the Identifier SAR on the top of the SAS matches the given type. If not type is present, assign a type. Push a Type SAR on to the SAS.
 
 ### #param - Parameter
 
