@@ -25,7 +25,7 @@ character_literal ::= "\'" character "\'"
 character ::= [ "\" ] printable_ascii
   ;
 
-number_literal ::= [ "+" | "-" ] number_literal
+number_literal ::= [ "+" | "-" ] number
   ;
 
 number ::= "0"
