@@ -302,8 +302,11 @@ var Syntax = {
     } else if (lexeme === 'if') {
       checkLexeme('if');
       checkLexeme('(');
+      Semantics.oPush('(');
       this.expression();
       checkLexeme(')');
+      Semantics.oPush(')');
+      Semantics.if();
       this.statement();
       if (tokens.currentToken.lexeme === 'else') {
         checkLexeme('else');
@@ -312,8 +315,11 @@ var Syntax = {
     } else if (lexeme === 'while') {
       checkLexeme('while');
       checkLexeme('(');
+      Semantics.oPush('(');
       this.expression();
       checkLexeme(')');
+      Semantics.oPush(')');
+      Semantics.while();
       this.statement();
     } else if (lexeme === 'rtn') {
       checkLexeme('rtn');
@@ -329,6 +335,7 @@ var Syntax = {
         }
         checkLexeme(';');
       }
+      Semantics.rtn();
     } else if (lexeme === 'write') {
       checkLexeme('write');
       this.expression();
@@ -404,13 +411,19 @@ var Syntax = {
     } else if (lexeme === 'atoi') {
       checkLexeme('atoi');
       checkLexeme('(');
+      Semantics.oPush('(');
       this.expression();
       checkLexeme(')');
+      Semantics.oPush(')');
+      Semantics.atoi();
     } else if (lexeme === 'itoa') {
       checkLexeme('itoa');
       checkLexeme('(');
+      Semantics.oPush('(');
       this.expression();
       checkLexeme(')');
+      Semantics.oPush(')');
+      Semantics.itoa();
     } else if (token.type === TokenTypes.IDENTIFIER) {
       // Look for a free variable
       var identifier = tokens.currentToken.lexeme;
@@ -476,10 +489,12 @@ var Syntax = {
     }
 
     checkLexeme('(');
+    Semantics.BAL();
     if (this.arg_list(true)) {
       this.arg_list();
     }
     checkLexeme(')');
+    Semantics.EAL();
   },
 
   /**
@@ -493,6 +508,7 @@ var Syntax = {
     this.argument();
     while (tokens.currentToken.lexeme === ',') {
       checkLexeme(',');
+      Semantics[',']();
       this.argument();
     }
   },

@@ -243,7 +243,7 @@ Semantics = {
       parameter = Stack.action.pop();
     }
 
-    Stack.scope.top.push(parameter);
+    Stack.scope.top.params.push(parameter);
 
     // Only add parameters on initial type pass
     if (this.onlyTypeInference) {
