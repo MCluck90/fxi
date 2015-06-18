@@ -190,6 +190,15 @@ Semantics = {
       return;
     }
 
+    var idSar = Stack.action.top,
+        symbol = SymbolTable.getSymbol(idSar.ID);
+    if (!symbol.data.type) {
+      symbol.data.type = type;
+      idSar.type = type;
+    } else if (symbol.data.type !== type) {
+      throw new Error('Cannot redefine \'' + idSar.identifier + '\' as type \'' + type + '\'');
+    }
+
     Stack.action.push(new SAR.Type(type));
   },
 
