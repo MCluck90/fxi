@@ -7,32 +7,14 @@ var Stack = {
 };
 
 Stack.clear = function() {
-  while (this.action.length) {
-    this.action.pop();
-  }
-  while (this.operator.length) {
-    this.operator.pop();
-  }
-  while (this.scope.length) {
-    this.scope.pop();
-  }
+  this.action = [];
+  this.operator = [];
+  this.scope = [];
 };
 
-Object.defineProperty(Stack.action, 'top', {
+Object.defineProperty(Array.prototype, 'top', {
   get: function() {
-    return Stack.action[Stack.action.length - 1];
-  }
-});
-
-Object.defineProperty(Stack.operator, 'top', {
-  get: function() {
-    return Stack.operator[Stack.operator.length - 1];
-  }
-});
-
-Object.defineProperty(Stack.scope, 'top', {
-  get: function() {
-    return Stack.scope[Stack.scope.length - 1];
+    return this[this.length - 1];
   }
 });
 
