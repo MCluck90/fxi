@@ -635,7 +635,13 @@ Semantics = {
       return;
     }
 
-    throw new Error('Not yet implemented');
+    var expressionA = Stack.action.pop(),
+        expressionB = Stack.action.pop();
+    if (expressionA.type !== expressionB.type) {
+      throwSemanticError('Cannot compare a ' + expressionA.type + ' with a ' + expressionB.type);
+    }
+    var temp = new SAR.Temp('bool', !this.onlyTypeInference);
+    Stack.action.push(temp);
   },
 
   /**
