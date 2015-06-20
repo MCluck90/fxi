@@ -604,7 +604,16 @@ Semantics = {
       return;
     }
 
-    throw new Error('Not yet implemented');
+    var expressionA = Stack.action.pop(),
+        expressionB = Stack.action.pop();
+    if (expressionB.type !== 'bool') {
+      throwSemanticError('Expected type bool, found type ' + expressionB.type);
+    } else if (expressionA.type !== 'bool') {
+      throwSemanticError('Expected type bool, found type ' + expressionA.type);
+    }
+
+    var temp = new SAR.Temp('bool', !this.onlyTypeInference);
+    Stack.action.push(temp);
   },
 
   /**
@@ -615,7 +624,7 @@ Semantics = {
       return;
     }
 
-    throw new Error('Not yet implemented');
+    this['&&']();
   },
 
   /**
