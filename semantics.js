@@ -652,7 +652,7 @@ Semantics = {
       return;
     }
 
-    throw new Error('Not yet implemented');
+    this['==']();
   }
 };
 
