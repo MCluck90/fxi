@@ -259,7 +259,7 @@ Semantics = {
       return;
     }
 
-    throw new Error('Not yet implemented');
+    Stack.action.push(new SAR.BAL());
   },
 
   /**
@@ -270,7 +270,7 @@ Semantics = {
       return;
     }
 
-    throw new Error('Not yet implemented');
+    this.EOE(false);
   },
 
   /**
@@ -281,7 +281,16 @@ Semantics = {
       return;
     }
 
-    throw new Error('Not yet implemented');
+    this.EOE(false);
+    var argList = new SAR.ArgList();
+    while (!(Stack.action.top instanceof SAR.BAL)) {
+      argList.args.push(Stack.action.pop());
+    }
+
+    // Pop off the BAL
+    Stack.action.pop();
+
+    Stack.action.push(argList);
   },
 
   /**
