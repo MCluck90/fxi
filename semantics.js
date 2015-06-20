@@ -333,7 +333,15 @@ Semantics = {
       return;
     }
 
-    throw new Error('Not yet implemented');
+    // Evaluate the current expression
+    this.EOE(false);
+    var result = Stack.action.pop(),
+        scope = Stack.scope.top;
+    if (!scope.returnType) {
+      scope.returnType = result.type;
+    } else if (result.type !== scope.returnType) {
+      throwSemanticError('Expected value of type ' + scope.returnType + ', found type ' + result.type);
+    }
   },
 
   /********
@@ -456,7 +464,7 @@ Semantics = {
 
     inferType(a, 'int');
     inferType(b, 'int');
-    Stack.action.push(new SAR.Temp('int'));
+    Stack.action.push(new SAR.Temp('int', !this.onlyTypeInference));
 
     return {
       a: a,
