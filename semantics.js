@@ -31,7 +31,7 @@ function inferType(sar, type) {
   }
 
   sar.type = type;
-  var symbol = SymbolTable().findSymbol(sar.ID);
+  var symbol = SymbolTable().findSymbol(sar.identifier);
   if (symbol) {
     symbol.data.type = type;
   }
@@ -190,14 +190,13 @@ Semantics = {
         if (i > 0) {
           typeString += ', ';
         }
-        typeString += params[i].type;
+        typeString += params[i].data.type;
       }
       typeString += ')';
       symbol.data.type = typeString;
     }
 
     symbol.data.returnType = returnType;
-    symbol.data.params = params;
   },
 
   /**
@@ -242,8 +241,6 @@ Semantics = {
     } else {
       parameter = Stack.action.pop();
     }
-
-    Stack.scope.top.params.push(parameter);
 
     // Only add parameters on initial type pass
     if (this.onlyTypeInference) {
