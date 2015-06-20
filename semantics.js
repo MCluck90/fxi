@@ -320,7 +320,11 @@ Semantics = {
       return;
     }
 
-    throw new Error('Not yet implemented');
+    this.EOE(false);
+    var expression = Stack.action.pop();
+    if (expression.type !== 'bool') {
+      throwSemanticError('Expression must be of type bool');
+    }
   },
 
   /**
