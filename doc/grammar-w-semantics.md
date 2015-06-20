@@ -94,7 +94,7 @@ parameter ::= identifier #iPush [ type_declaration ] #param
 statement ::= "{" { statement } "}"
   | variable_declaration
   | expression ";" #EOE
-  | "if" "(" #oPush expression ")" #oPush #if statement [ "else" statement ]
+  | "if" "(" expression ")" #if statement [ "else" statement ]
   | "while" "(" #oPush expression ")" #oPush #while statement
   | "rtn" lambda #rtn
   | "rtn" [ expression ] ";" #rtn

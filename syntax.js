@@ -301,10 +301,8 @@ var Syntax = {
     } else if (lexeme === 'if') {
       checkLexeme('if');
       checkLexeme('(');
-      Semantics.oPush('(');
       this.expression();
       checkLexeme(')');
-      Semantics.oPush(')');
       Semantics.if();
       this.statement();
       if (tokens.currentToken.lexeme === 'else') {
@@ -314,10 +312,8 @@ var Syntax = {
     } else if (lexeme === 'while') {
       checkLexeme('while');
       checkLexeme('(');
-      Semantics.oPush('(');
       this.expression();
       checkLexeme(')');
-      Semantics.oPush(')');
       Semantics.while();
       this.statement();
     } else if (lexeme === 'rtn') {
