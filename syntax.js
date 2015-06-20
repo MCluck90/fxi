@@ -210,7 +210,6 @@ var Syntax = {
     }
 
     symbol = SymbolTable().addSymbol(symbol);
-    Semantics.iPush(symbol.value);
     SymbolTable().setScope(symbol);
     Semantics.sPush(symbol);
     checkLexeme('=>');
