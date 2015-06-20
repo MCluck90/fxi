@@ -301,7 +301,11 @@ Semantics = {
       return;
     }
 
-    throw new Error('Not yet implemented');
+    var argList = Stack.action.pop(),
+        identifier = Stack.action.pop(),
+        fnSymbol = SymbolTable.getSymbol(identifier.ID),
+        func = new SAR.Func(argList.args, fnSymbol);
+    Stack.action.push(func);
   },
 
   /******************

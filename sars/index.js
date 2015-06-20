@@ -2,6 +2,7 @@
 module.exports = {
   ArgList: require('./arg-list.js'),
   BAL: require('./bal.js'),
+  Func: require('./func.js'),
   Identifier: require('./identifier.js'),
   Literal: require('./literal.js'),
   Scope: require('./scope.js'),

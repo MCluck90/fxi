@@ -494,6 +494,7 @@ var Syntax = {
     }
     checkLexeme(')');
     Semantics.EAL();
+    Semantics.func();
   },
 
   /**
