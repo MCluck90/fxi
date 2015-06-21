@@ -245,6 +245,11 @@ SymbolTable.prototype = {
       }
     }
 
+    // Mark the return type for main
+    if (symbol.value === 'main') {
+      symbol.data.returnType = 'void';
+    }
+
     var exists = currentScope.findSymbol(symbol.value);
     if (exists) {
       if (exists.type === SymbolTypes.Fn) {
