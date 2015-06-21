@@ -197,7 +197,7 @@ Semantics = {
 
     var scope = Stack.scope.pop(),
         symbol = scope.symbol,
-        returnType = scope.returnType,
+        returnType = scope.returnType || 'void',
         params = scope.params;
 
     if (!scope.type) {
