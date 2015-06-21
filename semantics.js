@@ -560,7 +560,12 @@ Semantics = {
       return;
     }
 
-    throw new Error('Not yet implemented');
+    var expressionA = Stack.action.pop(),
+        expressionB = Stack.action.pop();
+    inferType(expressionA, 'int');
+    inferType(expressionB, 'int');
+    var temp = new SAR.Temp('bool', !this.onlyTypeInference);
+    Stack.action.push(temp);
   },
 
   /**
@@ -571,7 +576,7 @@ Semantics = {
       return;
     }
 
-    throw new Error('Not yet implemented');
+    this['<']();
   },
 
   /**
@@ -582,7 +587,7 @@ Semantics = {
       return;
     }
 
-    throw new Error('Not yet implemented');
+    this['<']();
   },
 
   /**
@@ -593,7 +598,7 @@ Semantics = {
       return;
     }
 
-    throw new Error('Not yet implemented');
+    this['<']();
   },
 
   /**
