@@ -4,9 +4,12 @@ var Func = function(args, symbol) {
   this.identifier = symbol.value;
   this.type = symbol.data.returnType;
   if (!symbol.data.returnType && symbol.data.type) {
-    this.type = symbol.data.type.match(/<(.+)>/)[1];
+    var matches = symbol.data.type.match(/<(.+)>/);
+    if (matches) {
+      this.type = matches[1];
+    }
   }
-  if (this.type.indexOf('<') === 0) {
+  if (this.type && this.type.indexOf('<') === 0) {
     this.returnType = this.type.match(/<(.+)>/)[1];
   }
 };
