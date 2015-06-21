@@ -140,6 +140,21 @@ Semantics = {
       return len + 1;
     }
 
+    if (operator === ')') {
+      // Evaluate current expression
+      while (Stack.operator.top !== '(') {
+        var op = Stack.operator.pop();
+        if (!op) {
+          throw new Error('Failed to find opening parenthesis');
+        }
+        Semantics[op]();
+      }
+
+      // Pop the matching '('
+      Stack.operator.pop();
+      return;
+    }
+
     if (['(', '['].indexOf(operator) > -1) {
       Stack.operator.push(operator);
     } else {
@@ -372,6 +387,7 @@ Semantics = {
       return;
     }
 
+    this.EOE(false);
     var expression = Stack.action.pop();
     if (!expression.type) {
       throwSemanticError(expression.identifier + ': Cannot write unknown type');
@@ -422,28 +438,6 @@ Semantics = {
   /***************
    *  OPERATORS  *
    ***************/
-
-  /**
-   * Begin operator grouping
-   */
-  '(': function() {
-    if (!this.enabled) {
-      return;
-    }
-
-    throw new Error('Not yet implemented');
-  },
-
-  /**
-   * End operator grouping
-   */
-  ')': function() {
-    if (!this.enabled) {
-      return;
-    }
-
-    throw new Error('Not yet implemented');
-  },
 
   /**
    * End of expression
