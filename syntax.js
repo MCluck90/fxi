@@ -375,8 +375,10 @@ var Syntax = {
 
     if (lexeme === '(') {
       checkLexeme('(');
+      Semantics.oPush('(');
       this.expression();
       checkLexeme(')');
+      Semantics.oPush(')');
     } else if (lexeme === 'true') {
       Semantics.lPush('bool', 'true');
       checkLexeme('true');
