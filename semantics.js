@@ -32,9 +32,15 @@ function inferType(sar, type) {
 
   if (sar.type === null) {
     sar.type = type;
+    if (type.indexOf('<') === 0) {
+      sar.returnType = type.match(/<(.+)>/)[1];
+    }
     var symbol = SymbolTable().findSymbol(sar.identifier);
     if (symbol) {
       symbol.data.type = type;
+      if (sar.returnType) {
+        symbol.data.returnType = sar.returnType;
+      }
     }
   }
 }
@@ -202,7 +208,7 @@ Semantics = {
 
     if (!scope.type) {
       // Determine a type string from the scope
-      var typeString = returnType + ' : (';
+      var typeString = '<' + returnType + '>' + ' : (';
       for (var i = 0, len = params.length; i < len; i++) {
         if (i > 0) {
           typeString += ', ';
@@ -211,9 +217,11 @@ Semantics = {
       }
       typeString += ')';
       symbol.data.type = typeString;
+      scope.type = typeString;
     }
 
     symbol.data.returnType = returnType;
+    Stack.action.push(scope);
   },
 
   /**
@@ -298,7 +306,6 @@ Semantics = {
       return;
     }
 
-    this.EOE(false);
     var argList = new SAR.ArgList();
     while (!(Stack.action.top instanceof SAR.BAL)) {
       argList.args.push(Stack.action.pop());

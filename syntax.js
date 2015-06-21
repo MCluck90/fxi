@@ -113,6 +113,7 @@ var Syntax = {
     fnName = 'main';
     checkLexeme('main');
     this.lambda();
+    Semantics.EOE();
     ICode.Exit();
   },
 
@@ -177,6 +178,7 @@ var Syntax = {
     fnName = tokens.currentToken.lexeme;
     checkTokenType(TokenTypes.IDENTIFIER);
     this.lambda();
+    Semantics.EOE();
   },
 
   /**
