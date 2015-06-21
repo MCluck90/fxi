@@ -131,7 +131,7 @@ exp_z ::= "=" #oPush expression
   | "/" #oPush expression
   ;
 
-fn_call ::= "(" #BAL [ arg_list ] ")" #EAL
+fn_call ::= "(" #BAL [ arg_list ] ")" #EAL #func
   ;
 
 arg_list ::= argument { "," #, argument }
