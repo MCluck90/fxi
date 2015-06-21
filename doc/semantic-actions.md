@@ -42,11 +42,11 @@
 
 ### #EAL - End of Argument List
 
-  * While SAS.pop is not the Beginning of Argument List SAR, place each argument into an Argument List SAR. Push the Argument List SAR on to the SAS.
+  * While SAS.top is not the Beginning of Argument List SAR, place each argument into an Argument List SAR. Push the Argument List SAR on to the SAS.
 
 ### #func - Function
 
-  * Pop the Argument List and the Identifier from the SAS then use them to form a Function SAR. Push the Function SAR on to the SAS.
+  * Pop the Argument List and the Identifier from the SAS then use them to form a Function SAR. Verify the function exists. Push the Function SAR on to the SAS.
 
 ### #if - If
 

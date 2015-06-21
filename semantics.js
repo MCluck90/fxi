@@ -320,8 +320,15 @@ Semantics = {
 
     var argList = Stack.action.pop(),
         identifier = Stack.action.pop(),
-        fnSymbol = SymbolTable.getSymbol(identifier.ID),
-        func = new SAR.Func(argList.args, fnSymbol);
+        fnSymbol = (identifier.ID) ? SymbolTable.getSymbol(identifier.ID) : null,
+        func = (fnSymbol)? new SAR.Func(argList.args, fnSymbol) : null;
+
+    // Determine if this is a function
+    if (!fnSymbol) {
+      throwSemanticError(identifier.identifier + ' does not exist');
+    } else if (!fnSymbol.data.returnType) {
+      throwSemanticError('Cannot use ' + identifier.identifier + ' as a function');
+    }
     Stack.action.push(func);
   },
 
