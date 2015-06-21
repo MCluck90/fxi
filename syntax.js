@@ -292,6 +292,7 @@ var Syntax = {
       while (this.statement(true)) {
         this.statement();
       }
+      checkLexeme('}');
     } else if (this.variable_declaration(true)) {
       this.variable_declaration();
     } else if (this.expression(true)) {
