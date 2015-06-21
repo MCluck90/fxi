@@ -30,10 +30,12 @@ function inferType(sar, type) {
     throw new Error('Cannot save inferred type');
   }
 
-  sar.type = type;
-  var symbol = SymbolTable().findSymbol(sar.identifier);
-  if (symbol) {
-    symbol.data.type = type;
+  if (sar.type === null) {
+    sar.type = type;
+    var symbol = SymbolTable().findSymbol(sar.identifier);
+    if (symbol) {
+      symbol.data.type = type;
+    }
   }
 }
 
