@@ -489,11 +489,13 @@ var Syntax = {
     }
 
     checkLexeme('(');
+    Semantics.oPush('(');
     Semantics.BAL();
     if (this.arg_list(true)) {
       this.arg_list();
     }
     checkLexeme(')');
+    Semantics.oPush(')');
     Semantics.EAL();
     Semantics.func();
   },

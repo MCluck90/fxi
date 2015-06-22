@@ -252,7 +252,8 @@ SymbolTable.prototype = {
 
     var exists = currentScope.findSymbol(symbol.value);
     if (exists) {
-      if (exists.type === SymbolTypes.Fn) {
+      // Don't mark as a duplicate if searching for a free variable
+      if (exists.type === SymbolTypes.Fn && symbol.type !== SymbolTypes.FreeVar) {
         exists.isDuplicate = true;
       }
       return exists;
