@@ -328,7 +328,7 @@ Semantics = {
     var argList = Stack.action.pop(),
         identifier = Stack.action.pop(),
         fnSymbol = (identifier.ID) ? SymbolTable.getSymbol(identifier.ID) : null,
-        func = (fnSymbol)? new SAR.Func(argList.args, fnSymbol) : null;
+        func = (fnSymbol) ? new SAR.Func(argList.args, fnSymbol) : null;
 
     // Determine if this is a function
     if (!fnSymbol) {

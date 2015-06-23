@@ -1,3 +1,5 @@
+'use strict';
+
 var Func = function(args, symbol) {
   this.args = args;
   this.ID = symbol.ID;
