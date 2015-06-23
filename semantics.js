@@ -337,8 +337,6 @@ Semantics = {
       throwSemanticError('Cannot use ' + identifier.identifier + ' as a function');
     }
     Stack.action.push(func);
-    console.log(Stack.action);
-    console.log(Stack.operator);
   },
 
   /******************
