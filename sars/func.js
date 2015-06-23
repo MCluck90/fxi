@@ -1,10 +1,10 @@
 'use strict';
 
-var Func = function(args, symbol) {
+var Temp = require('./temp.js');
+
+var Func = function(args, symbol, createTemp) {
+  Temp.call(this, symbol.data.returnType, createTemp);
   this.args = args;
-  this.ID = symbol.ID;
-  this.identifier = symbol.value;
-  this.type = symbol.data.returnType;
   if (!symbol.data.returnType && symbol.data.type) {
     var matches = symbol.data.type.match(/<(.+)>/);
     if (matches) {

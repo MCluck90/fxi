@@ -37,9 +37,9 @@ function inferType(sar, type) {
     }
     var symbol = SymbolTable().findSymbol(sar.identifier);
     if (symbol) {
-      symbol.data.type = type;
-      if (sar.returnType) {
-        symbol.data.returnType = sar.returnType;
+      symbol.data.type = symbol.data.type || type;
+      if (sar instanceof SAR.Func) {
+        symbol.data.returnType = type;
       }
     }
   }
@@ -328,7 +328,7 @@ Semantics = {
     var argList = Stack.action.pop(),
         identifier = Stack.action.pop(),
         fnSymbol = (identifier.ID) ? SymbolTable.getSymbol(identifier.ID) : null,
-        func = (fnSymbol) ? new SAR.Func(argList.args, fnSymbol) : null;
+        func = (fnSymbol) ? new SAR.Func(argList.args, fnSymbol, !this.onlyTypeInference) : null;
 
     // Determine if this is a function
     if (!fnSymbol) {
@@ -337,6 +337,8 @@ Semantics = {
       throwSemanticError('Cannot use ' + identifier.identifier + ' as a function');
     }
     Stack.action.push(func);
+    console.log(Stack.action);
+    console.log(Stack.operator);
   },
 
   /******************
@@ -621,11 +623,8 @@ Semantics = {
 
     var expressionA = Stack.action.pop(),
         expressionB = Stack.action.pop();
-    if (expressionB.type !== 'bool') {
-      throwSemanticError('Expected type bool, found type ' + expressionB.type);
-    } else if (expressionA.type !== 'bool') {
-      throwSemanticError('Expected type bool, found type ' + expressionA.type);
-    }
+    inferType(expressionA, 'bool');
+    inferType(expressionB, 'bool');
 
     var temp = new SAR.Temp('bool', !this.onlyTypeInference);
     Stack.action.push(temp);
