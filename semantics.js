@@ -229,7 +229,7 @@ Semantics = {
    * Pushes a type on to the action stack
    * @param {string} type
    */
-  tPush: function(type) {
+  tPush: function(type, isFunc) {
     if (!this.enabled) {
       return;
     }
@@ -241,6 +241,17 @@ Semantics = {
       idSar.type = type;
     } else if (symbol.data.type !== type) {
       throw new Error('Cannot redefine \'' + idSar.identifier + '\' as type \'' + type + '\'');
+    }
+
+    if (isFunc) {
+      var returnType = type.split('->');
+      returnType = returnType[returnType.length - 1];
+      if (!symbol.data.returnType) {
+        symbol.data.returnType = returnType;
+        idSar.returnType = returnType;
+      } else if (symbol.data.returnType !== returnType) {
+        throw new Error('Cannot redefine return type of \'' + idSar.identifier + '\' as type \'' + returnType + '\'');
+      }
     }
 
     Stack.action.push(new SAR.Type(type));

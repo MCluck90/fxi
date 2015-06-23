@@ -55,6 +55,8 @@ number_z ::= "0"
 type ::= "bool"
   | "int"
   | "char"
+  | "void"
+  | "(" type ")" "->" type
   ;
 ```
 

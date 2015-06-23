@@ -55,6 +55,8 @@ number_z ::= "0"
 type ::= "bool" #tPush
   | "int" #tPush
   | "char" #tPush
+  | "void" #tPush
+  | "(" [ type ] ")" "->" type
   ;
 ```
 

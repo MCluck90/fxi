@@ -121,14 +121,40 @@ var Syntax = {
    * "bool"
    * "char"
    * "int"
+   * "(" type ")" "->" type
    */
-  type: function(depthCheck) {
+  type: function(depthCheck, append) {
     if (depthCheck) {
-      return tokens.currentToken.type === TokenTypes.TYPE;
+      return tokens.currentToken.type === TokenTypes.TYPE ||
+             tokens.currentToken.type === TokenTypes.TYPE_ARROW;
     }
 
-    Semantics.tPush(tokens.currentToken.lexeme);
-    checkTokenType(TokenTypes.TYPE);
+    if (tokens.currentToken.type === TokenTypes.TYPE) {
+      if (append) {
+        var result = tokens.currentToken.lexeme;
+        checkTokenType(TokenTypes.TYPE);
+        return result;
+      } else {
+        Semantics.tPush(tokens.currentToken.lexeme);
+        checkTokenType(TokenTypes.TYPE);
+      }
+    } else {
+      checkLexeme('(');
+      var result = '(';
+      if (this.type(true)) {
+        result += this.type(false, true);
+      }
+      checkLexeme(')');
+      result += ')';
+      checkLexeme('->');
+      result += '->';
+      result += this.type(false, true);
+      if (append) {
+        return result;
+      } else {
+        Semantics.tPush(result, true);
+      }
+    }
   },
 
   /**
