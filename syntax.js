@@ -144,6 +144,14 @@ var Syntax = {
       if (this.type(true)) {
         result += this.type(false, true);
       }
+      if (result === '(' && tokens.currentToken.lexeme === ',') {
+        checkTokenType(TokenTypes.TYPE);
+      }
+      while (tokens.currentToken.lexeme === ',') {
+        checkLexeme(',');
+        result += ',';
+        result += this.type(false, true);
+      }
       checkLexeme(')');
       result += ')';
       checkLexeme('->');
