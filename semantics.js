@@ -208,14 +208,15 @@ Semantics = {
 
     if (!scope.type) {
       // Determine a type string from the scope
-      var typeString = '<' + returnType + '>' + ' : (';
+      var typeString = '(';
+      //var typeString = '<' + returnType + '>' + ' : (';
       for (var i = 0, len = params.length; i < len; i++) {
         if (i > 0) {
-          typeString += ', ';
+          typeString += ',';
         }
         typeString += params[i].data.type;
       }
-      typeString += ')';
+      typeString += ')->' + returnType;
       symbol.data.type = typeString;
       scope.type = typeString;
     }
