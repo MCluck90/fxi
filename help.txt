@@ -11,3 +11,4 @@ Options:
   -o [file], --output [file]  Save output to a given file.
                               Will print to stdout if a file
                               is not given.
+  -s, --symbol                Prints out the symbol table

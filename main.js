@@ -84,4 +84,8 @@ runPass('syntax')
       console.log(targetCode);
     }
   }
+
+  if (argv.s || argv.symbol) {
+    SymbolTable().print();
+  }
 });
