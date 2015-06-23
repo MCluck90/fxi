@@ -56,7 +56,7 @@ type ::= "bool" #tPush
   | "int" #tPush
   | "char" #tPush
   | "void" #tPush
-  | "(" [ type ] [ "," type ] ")" "->" type
+  | "(" ( [ type ] | type [ "," type ] ) ")" "->" type
   ;
 ```
 

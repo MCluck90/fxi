@@ -56,7 +56,7 @@ type ::= "bool"
   | "int"
   | "char"
   | "void"
-  | "(" [ type ] [ "," type ] ")" "->" type
+  | "(" ( [ type ] | type [ "," type ] ) ")" "->" type
   ;
 ```
 
