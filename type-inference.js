@@ -95,10 +95,18 @@ var TypeInference = {
           continue;
         }
         var resolvedType = resolved[typeID].type;
-        if (newType && resolvedType !== newType) {
-          throw new Error('Conflicting types: ' + newType + ', ' + resolvedType);
+        if (nodeID.indexOf('FN') === 0) {
+          newType = newType || '(';
+          if (newType.length > 1) {
+            newType += ',';
+          }
+          newType += resolvedType;
+        } else {
+          if (newType && resolvedType !== newType) {
+            throw new Error('Conflicting types: ' + newType + ', ' + resolvedType);
+          }
+          newType = resolvedType;
         }
-        newType = resolvedType;
       }
       for (var i = 0; i < returnTypeDependencies.length; i++) {
         var returnTypeID = returnTypeDependencies[i];
@@ -117,6 +125,9 @@ var TypeInference = {
       }
 
       if ((newType || !typeDependencies.length) && (newReturnType || !returnTypeDependencies.length)) {
+        if (nodeID.indexOf('FN') === 0) {
+          newType += ')->' + newReturnType;
+        }
         resolved[nodeID] = {
           type: newType,
           returnType: newReturnType
@@ -125,30 +136,10 @@ var TypeInference = {
         unresolvedIDs.pop();
       }
     }
-
-    // Resolve the function types
-    var functionIDs = Object.keys(resolved).filter(function(id) {
-      return id.indexOf('FN') === 0 || id.indexOf('LA') === 0;
-    });
-    for (var i = 0; i < functionIDs.length; i++) {
-      var funcID = functionIDs[i],
-          paramIDs = ['PA001'],
-          node = resolved[funcID],
-          typeString = '(';
-      for (var j = 0; j < paramIDs.length; j++) {
-        var paramID = paramIDs[j],
-            paramType = resolved[paramID].type;
-        if (typeString.length > 1) {
-          typeString += ',';
-        }
-        typeString += paramType;
-      }
-      typeString += ')->' + node.returnType;
-      node.type = typeString;
-    }
   }
 };
 
+TypeInference.addTypeDependency('FN001', 'PA001');
 TypeInference.addKnownType('NU001', 'int');
 TypeInference.addKnownType('PA001', 'int');
 TypeInference.addReturnTypeDependency('FN001', 'PA001');
