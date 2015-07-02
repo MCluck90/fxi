@@ -125,7 +125,56 @@ var TypeInference = {
         unresolvedIDs.pop();
       }
     }
+
+    // Resolve the function types
+    var functionIDs = Object.keys(resolved).filter(function(id) {
+      return id.indexOf('FN') === 0 || id.indexOf('LA') === 0;
+    });
+    for (var i = 0; i < functionIDs.length; i++) {
+      var funcID = functionIDs[i],
+          paramIDs = ['PA001'],
+          node = resolved[funcID],
+          typeString = '(';
+      for (var j = 0; j < paramIDs.length; j++) {
+        var paramID = paramIDs[j],
+            paramType = resolved[paramID].type;
+        if (typeString.length > 1) {
+          typeString += ',';
+        }
+        typeString += paramType;
+      }
+      typeString += ')->' + node.returnType;
+      node.type = typeString;
+    }
   }
 };
+
+TypeInference.addKnownType('NU001', 'int');
+TypeInference.addKnownType('PA001', 'int');
+TypeInference.addReturnTypeDependency('FN001', 'PA001');
+TypeInference.addKnownType('NU001', 'int');
+TypeInference.addKnownType('PA001', 'int');
+TypeInference.addKnownType('TE002', 'int');
+TypeInference.addReturnTypeDependency('FN001', 'TE003');
+TypeInference.addKnownType('NU002', 'int');
+TypeInference.addKnownType('PA001', 'int');
+TypeInference.addKnownType('TE004', 'int');
+TypeInference.addReturnTypeDependency('FN001', 'TE004');
+TypeInference.addKnownType('TE003', 'int');
+TypeInference.addKnownType('TE005', 'int');
+TypeInference.addKnownType('TE006', 'int');
+TypeInference.addReturnTypeDependency('FN001', 'TE006');
+TypeInference.addKnownType('CH001', 'char');
+console.log('<Pre-Resolve>');
+TypeInference.print();
+console.log('</Pre-Resolve>\n\n');
+TypeInference.resolve();
+console.log('<Post-Resolve>');
+TypeInference.print();
+console.log('</Post-Resolve>');
+
+/*****
+ * NOTE: Check that all known type dependencies match those types
+ *****/
 
 module.exports = TypeInference;
