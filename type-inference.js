@@ -76,6 +76,9 @@ var TypeInference = {
     }
   },
 
+  /**
+   * TODO: Does not handle cycles
+   */
   resolve: function() {
     var unresolvedIDs = Object.keys(unresolved);
     while (unresolvedIDs.length) {
@@ -163,9 +166,5 @@ TypeInference.resolve();
 console.log('<Post-Resolve>');
 TypeInference.print();
 console.log('</Post-Resolve>');
-
-/*****
- * NOTE: Check that all known type dependencies match those types
- *****/
 
 module.exports = TypeInference;
