@@ -4,61 +4,15 @@ var ICode = require('./icode.js'),
     Stack = require('./semantic-stack.js'),
     SymbolTable = require('./symbol-table.js'),
     SAR = require('./sars/index.js'),
+    TypeInference = require('./type-inference.js'),
     Semantics;
 
 function throwSemanticError(message) {
-  if (Semantics.onlyTypeInference) {
+  if (TypeInference.enabled) {
     return;
   }
 
   throw new Error(message);
-}
-
-/**
- * Performs a type check on the symbol and saves
- * the type of the symbol if one has not been set
- * @param {SAR}     sar   Semantic action record
- * @param {string}  type  Expected type
- */
-function inferType(sar, type) {
-  if (sar.type === type) {
-    return;
-  } else if (sar.type !== null) {
-    throwSemanticError('Expected value of type ' + type + ', found ' + sar.type);
-  } else if (!sar.ID) {
-    console.error(sar);
-    throw new Error('Cannot save inferred type');
-  }
-
-  if (sar.type === null) {
-    sar.type = type;
-    if (type.indexOf('<') === 0) {
-      sar.returnType = type.match(/<(.+)>/)[1];
-    }
-    var symbol = SymbolTable().findSymbol(sar.identifier);
-    if (symbol) {
-      symbol.data.type = symbol.data.type || type;
-      if (sar instanceof SAR.Func) {
-        symbol.data.returnType = type;
-      }
-    }
-  }
-}
-
-/**
- * Assigns a type to a symbol/SAR
- * @param {SAR}     sar
- * @param {string}  type
- */
-function assignType(sar, type) {
-  sar.type = type;
-  var symbol;
-  if (sar.ID) {
-    symbol = SymbolTable.getSymbol(sar.ID);
-  } else {
-    symbol = SymbolTable().findSymbol(sar.identifier || sar.value);
-  }
-  symbol.data.type = type;
 }
 
 Semantics = {
@@ -114,6 +68,7 @@ Semantics = {
     if (symbol === null) {
       throwSemanticError('Unknown literal value: ' + type + ' ' + value);
     }
+    TypeInference.addKnownType(symbol.ID, type);
     Stack.action.push(new SAR.Literal(type, value, symbol.ID));
   },
 
@@ -229,31 +184,13 @@ Semantics = {
    * Pushes a type on to the action stack
    * @param {string} type
    */
-  tPush: function(type, isFunc) {
+  tPush: function(type) {
     if (!this.enabled) {
       return;
     }
 
-    var idSar = Stack.action.top,
-        symbol = SymbolTable.getSymbol(idSar.ID);
-    if (!symbol.data.type) {
-      symbol.data.type = type;
-      idSar.type = type;
-    } else if (symbol.data.type !== type) {
-      throw new Error('Cannot redefine \'' + idSar.identifier + '\' as type \'' + type + '\'');
-    }
-
-    if (isFunc) {
-      var returnType = type.split('->');
-      returnType = returnType[returnType.length - 1];
-      if (!symbol.data.returnType) {
-        symbol.data.returnType = returnType;
-        idSar.returnType = returnType;
-      } else if (symbol.data.returnType !== returnType) {
-        throw new Error('Cannot redefine return type of \'' + idSar.identifier + '\' as type \'' + returnType + '\'');
-      }
-    }
-
+    var idSar = Stack.action.top;
+    TypeInference.addKnownType(idSar.ID, type);
     Stack.action.push(new SAR.Type(type));
   },
 
@@ -274,17 +211,18 @@ Semantics = {
       // Type declaration, assign it to the variable
       var typeSar = Stack.action.pop();
       parameter = Stack.action.pop();
-      assignType(parameter, typeSar.type);
+      TypeInference.addKnownType(parameter.ID, typeSar.type);
     } else {
       parameter = Stack.action.pop();
     }
 
     // Only add parameters on initial type pass
-    if (this.onlyTypeInference) {
+    if (TypeInference.enabled) {
       var fnSymbol = SymbolTable().symbol,
           parameterSymbol = SymbolTable.getSymbol(parameter.ID);
       fnSymbol.data.params = fnSymbol.data.params || [];
       fnSymbol.data.params.push(parameterSymbol);
+      TypeInference.addTypeDependency(fnSymbol.ID, parameter.ID);
     }
   },
 
@@ -340,7 +278,7 @@ Semantics = {
     var argList = Stack.action.pop(),
         identifier = Stack.action.pop(),
         fnSymbol = (identifier.ID) ? SymbolTable.getSymbol(identifier.ID) : null,
-        func = (fnSymbol) ? new SAR.Func(argList.args, fnSymbol, !this.onlyTypeInference) : null;
+        func = (fnSymbol) ? new SAR.Func(argList.args, fnSymbol) : null;
 
     // Determine if this is a function
     if (!fnSymbol) {
@@ -365,6 +303,7 @@ Semantics = {
 
     this.EOE(false);
     var expression = Stack.action.pop();
+    TypeInference.addKnownType(expression.ID, 'bool');
     if (expression.type !== 'bool') {
       throwSemanticError('Expression must be of type bool');
     }
@@ -394,6 +333,7 @@ Semantics = {
     this.EOE(false);
     var result = Stack.action.pop(),
         scope = Stack.scope.top;
+    TypeInference.addReturnTypeDependency(scope.ID, result.ID);
     if (!scope.returnType) {
       scope.returnType = result.type;
     } else if (result.type !== scope.returnType) {
@@ -415,8 +355,8 @@ Semantics = {
 
     this.EOE(false);
     var expression = Stack.action.pop();
-    if (!expression.type) {
-      throwSemanticError(expression.identifier + ': Cannot write unknown type');
+    if (expression.type !== 'char' && expression.type !== 'bool') {
+      throwSemanticError('Cannot write out type ' + expression.type + '. Must be a char or an int');
     }
     ICode.Write(expression);
   },
@@ -430,8 +370,8 @@ Semantics = {
     }
 
     var expression = Stack.action.pop();
-    if (!expression.type) {
-      throwSemanticError(expression.identifier + ': Cannot read to unknown type');
+    if (expression.type !== 'char' && expression.type !== 'bool') {
+      throwSemanticError('Cannot read to type ' + expression.type + '. Must be a char or an int');
     }
   },
 
@@ -496,11 +436,13 @@ Semantics = {
    */
   _mathOperation: function() {
     var a = Stack.action.pop(),
-        b = Stack.action.pop();
+        b = Stack.action.pop(),
+        temp = new SAR.Temp('int');
 
-    inferType(a, 'int');
-    inferType(b, 'int');
-    Stack.action.push(new SAR.Temp('int', !this.onlyTypeInference));
+    TypeInference.addKnownType(a.ID, 'int');
+    TypeInference.addKnownType(b.ID, 'int');
+    TypeInference.addKnownType(temp.ID, 'int');
+    Stack.action.push(temp);
 
     return {
       a: a,
@@ -563,11 +505,7 @@ Semantics = {
     var rhs = Stack.action.pop(),
         lhs = Stack.action.pop();
 
-    if (lhs.type !== null) {
-      inferType(rhs, lhs.type);
-    } else if (rhs.type !== null) {
-      inferType(lhs, rhs.type);
-    }
+    TypeInference.addTypeDependency(lhs.ID, rhs.ID);
   },
 
   /**********************
@@ -583,10 +521,12 @@ Semantics = {
     }
 
     var expressionA = Stack.action.pop(),
-        expressionB = Stack.action.pop();
-    inferType(expressionA, 'int');
-    inferType(expressionB, 'int');
-    var temp = new SAR.Temp('bool', !this.onlyTypeInference);
+        expressionB = Stack.action.pop(),
+        temp = new SAR.Temp('bool');
+
+    TypeInference.addKnownType(expressionA.ID, 'int');
+    TypeInference.addKnownType(expressionB.ID, 'int');
+    TypeInference.addKnownType(temp.ID, 'bool');
     Stack.action.push(temp);
   },
 
@@ -632,11 +572,12 @@ Semantics = {
     }
 
     var expressionA = Stack.action.pop(),
-        expressionB = Stack.action.pop();
-    inferType(expressionA, 'bool');
-    inferType(expressionB, 'bool');
+        expressionB = Stack.action.pop(),
+        temp = new SAR.Temp('bool');
 
-    var temp = new SAR.Temp('bool', !this.onlyTypeInference);
+    TypeInference.addKnownType(expressionA.ID, 'bool');
+    TypeInference.addKnownType(expressionB.ID, 'bool');
+    TypeInference.addKnownType(temp.ID, 'bool');
     Stack.action.push(temp);
   },
 
@@ -660,11 +601,14 @@ Semantics = {
     }
 
     var expressionA = Stack.action.pop(),
-        expressionB = Stack.action.pop();
+        expressionB = Stack.action.pop(),
+        temp = new SAR.Temp('bool');
+
+    TypeInference.addTypeDependency(expressionA.ID, expressionB.ID);
+    TypeInference.addKnownType(temp.ID, 'bool');
     if (expressionA.type !== expressionB.type) {
       throwSemanticError('Cannot compare a ' + expressionA.type + ' with a ' + expressionB.type);
     }
-    var temp = new SAR.Temp('bool', !this.onlyTypeInference);
     Stack.action.push(temp);
   },
 

@@ -2,8 +2,8 @@
 
 var Temp = require('./temp.js');
 
-var Func = function(args, symbol, createTemp) {
-  Temp.call(this, symbol.data.returnType, createTemp);
+var Func = function(args, symbol) {
+  Temp.call(this, symbol.data.returnType);
   this.args = args;
   if (!symbol.data.returnType && symbol.data.type) {
     var types = symbol.data.type.split('->');

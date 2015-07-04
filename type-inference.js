@@ -14,12 +14,13 @@ TypeInference = {
     }
 
     var node = resolved[symID],
-        symbol;
+        symbol = SymbolTable.getSymbol(symID);
     if (!node) {
       node = resolved[symID] = {
         ID: symID,
         type: null,
-        returnType: null
+        returnType: null,
+        value: symbol.value
       };
     }
     if (node.type !== null && node.type !== type) {
@@ -28,6 +29,15 @@ TypeInference = {
     symbol = SymbolTable.getSymbol(symID);
     symbol.data.type = type;
     node.type = type;
+
+    var unresolvedNode = unresolved[symID];
+    if (unresolvedNode) {
+      if (unresolvedNode.returnType.length === 0) {
+        delete unresolved[symID];
+      } else {
+        unresolvedNode.type = [];
+      }
+    }
   },
 
   addKnownReturnType: function(symID, returnType) {
@@ -36,33 +46,44 @@ TypeInference = {
     }
 
     var node = resolved[symID],
-        symbol;
+        symbol = SymbolTable.getSymbol(symID);
     if (!node) {
       node = resolved[symID] = {
         ID: symID,
         type: null,
-        returnType: null
+        returnType: null,
+        value: symbol.value
       };
     }
     if (node.returnType !== null && node.returnType !== returnType) {
       throw new Error('Must return a ' + node.returnType + ', not a ' + returnType);
     }
-    symbol = SymbolTable.getSymbol(symID);
     symbol.data.returnType = returnType;
     node.returnType = returnType;
+
+    var unresolvedNode = unresolved[symID];
+    if (unresolvedNode) {
+      if (unresolvedNode.type.length === 0) {
+        delete unresolved[symID];
+      } else {
+        unresolvedNode.returnType = [];
+      }
+    }
   },
 
   addTypeDependency: function(unresolvedID, dependentID) {
-    if (!this.enabled) {
+    if (!this.enabled || resolved[unresolvedID]) {
       return;
     }
 
-    var node = unresolved[unresolvedID];
+    var node = unresolved[unresolvedID],
+        symbol = SymbolTable.getSymbol(unresolvedID);
     if (!node) {
       node = unresolved[unresolvedID] = {
         ID: unresolvedID,
         type: [],
-        returnType: []
+        returnType: [],
+        value: symbol.value
       };
     }
     if (node.type.indexOf(dependentID) === -1) {
@@ -71,16 +92,18 @@ TypeInference = {
   },
 
   addReturnTypeDependency: function(unresolvedID, dependentID) {
-    if (!this.enabled) {
+    if (!this.enabled || resolved[unresolvedID]) {
       return;
     }
 
-    var node = unresolved[unresolvedID];
+    var node = unresolved[unresolvedID],
+        symbol = SymbolTable.getSymbol(unresolvedID);
     if (!node) {
       node = unresolved[unresolvedID] = {
         ID: unresolvedID,
         type: [],
-        returnType: []
+        returnType: [],
+        value: symbol.value
       };
     }
     if (node.returnType.indexOf(dependentID) === -1) {
@@ -92,7 +115,7 @@ TypeInference = {
     if (!this.enabled) {
       return;
     }
-    
+
     if (!node) {
       for (var id in unresolved) {
         TypeInference.resolve(unresolved[id]);
@@ -111,12 +134,11 @@ TypeInference = {
         } else if (unresolvedNode) {
           TypeInference.resolve(unresolvedNode);
           resolvedNode = resolved[id];
-          if (!resolvedNode || !resolvedNode.type) {
-            throw new Error('Unable to determine type for ' + id);
+          if (resolveNode && resolveNode.type) {
+            newType = resolveNode.type;
           }
-          newType = resolvedNode.type;
         } else {
-          throw new Error('Unable to determine type for ' + id);
+          throw new Error('Unable to determine type for ' + unresolvedNode.value);
         }
 
         if (isFunction) {
@@ -127,7 +149,7 @@ TypeInference = {
           type += newType;
         } else {
           if (type && newType !== type) {
-            throw new Error('Conflicting types: ' + type + ', ' + newType);
+            throw new Error('Conflicting types: (' + type + ' vs. ' + newType + ') for ' + resolvedNode.value);
           }
           type = newType;
         }
@@ -150,22 +172,22 @@ TypeInference = {
             // Does it recurse on itself? Create a recursive return type
             newReturnType = '...';
           } else if (!resolvedNode || !resolvedNode.type) {
-            throw new Error('Unable to determine type for ' + id);
+            throw new Error('Unable to determine type for ' + unresolvedNode.value);
           } else {
             newReturnType = resolvedNode.type;
           }
         } else {
-          throw new Error('Unable to determine type for ' + id);
+          throw new Error('Unable to determine type for ' + unresolvedNode.value);
         }
 
         if (returnType && newReturnType !== returnType) {
-          throw new Error('Conflicting types: ' + returnType + ', ' + newReturnType);
+          throw new Error('Conflicting types: (' + returnType + ' vs. ' + newReturnType + ') for ' + resolvedNode.value);
         }
         returnType = newReturnType;
       });
 
       if (!type && !returnType) {
-        throw new Error('Unable to determine type for ' + node.ID);
+        throw new Error('Unable to determine type for ' + node.value);
       }
       if (isFunction) {
         returnType = returnType || 'void';
@@ -181,14 +203,15 @@ TypeInference = {
       resolved[node.ID] = {
         ID: node.ID,
         type: type,
-        returnType: returnType
+        returnType: returnType,
+        value: node.value
       };
       delete unresolved[node.ID];
 
       // Save the changes to the actual symbol
       var symbol = SymbolTable.getSymbol(node.ID);
       symbol.data.type = type;
-      symbol.data.returnType = type;
+      symbol.data.returnType = returnType;
     }
   }
 };

@@ -8,6 +8,7 @@ var ICode = require('./icode.js'),
     Stack = require('./semantic-stack.js'),
     tokens = require('./scanner.js'),
     TokenTypes = tokens.TokenTypes,
+    TypeInference = require('./type-inference.js'),
 
     // If set to a string, contains next functions name
     fnName = null;
@@ -76,20 +77,21 @@ var Syntax = {
       case 'syntax':
         SymbolTable().enabled = true;
         Semantics.enabled = false;
+        TypeInference.enabled = false;
         ICode.enabled = false;
         break;
 
       case 'type inference':
         SymbolTable().enabled = false;
         Semantics.enabled = true;
-        Semantics.onlyTypeInference = true;
+        TypeInference.enabled = true;
         ICode.enabled = false;
         break;
 
       case 'semantics':
         SymbolTable().enabled = false;
         Semantics.enabled = true;
-        Semantics.onlyTypeInference = false;
+        TypeInference.enabled = false;
         ICode.enabled = true;
         ICode._quads = [];
         break;
@@ -99,6 +101,9 @@ var Syntax = {
     }
 
     this.program();
+    if (TypeInference.enabled) {
+      TypeInference.resolve();
+    }
   },
 
   /**
