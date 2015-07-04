@@ -2,6 +2,7 @@
 
 var Symbol = require('./symbol.js'),
     symID = 100,
+    tempID = 100,
     SymbolTypes = {
       Fn: 'Fn',
       Lambda: 'Lambda',
@@ -138,6 +139,14 @@ SymbolTable = function(parent, symbol) {
 };
 
 SymbolTable.prototype = {
+  /**
+   * Perform any work that should be done before a new pass
+   */
+  startPass: function() {
+    tempID = 100;
+    this.returnToGlobal();
+  },
+
   /**
    * Creates a new scope and attaches it to a symbol
    * @param {Symbol}  symbol
@@ -355,10 +364,12 @@ SymbolTable.prototype = {
     }
 
     var type = symbol.type || symbol;
-    if (!this.enabled && (type !== SymbolTypes.Temp || isLiteral(symbol))) {
+    if (type === SymbolTypes.Temp) {
+      // Ensure that temps are generated and accessed the same way across passes
+      return typeToLetter[type] + tempID++;
+    } else {
       return typeToLetter[type] + symID++;
     }
-    return typeToLetter[type] + symID++;
   },
 
   /**
@@ -376,6 +387,8 @@ SymbolTable.prototype = {
       delete this._symbols[name];
     }
     this._lambdaCount = 0;
+    symID = 100;
+    tempID = 100;
 
     if (isRoot) {
       currentScope = new SymbolTable();

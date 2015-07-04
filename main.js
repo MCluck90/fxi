@@ -36,6 +36,7 @@ function _then(cb) {
 function runPass(passName) {
   Scanner.init(filename, function() {
     try {
+      SymbolTable().startPass();
       Syntax.pass(passName);
     } catch(e) {
       var token = Scanner.currentToken;
