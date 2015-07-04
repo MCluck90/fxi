@@ -1,21 +1,11 @@
 'use strict';
 
-var SymbolTable = require('./symbol-table.js');
-
-function TypeNode(id, type, returnType) {
-  this.ID = id;
-  this.identifier = SymbolTable.getSymbol(id).value;
-  this.type = type;
-  this.returnType = returnType;
-  this.typeEdges = [];
-  this.returnTypeEdges = [];
-}
-
-var resolved = {},
+var SymbolTable = require('./symbol-table.js'),
+    resolved = {},
     unresolved = {},
-    seen = [];
+    seen = [],
 
-var TypeInference = {
+TypeInference = {
   print: function() {
     console.log('Unresolved');
     console.log(unresolved);
@@ -24,7 +14,8 @@ var TypeInference = {
   },
 
   addKnownType: function(symID, type) {
-    var node = resolved[symID];
+    var node = resolved[symID],
+        symbol;
     if (!node) {
       node = resolved[symID] = {
         ID: symID,
@@ -35,11 +26,14 @@ var TypeInference = {
     if (node.type !== null && node.type !== type) {
       throw new Error('Cannot use a ' + node.type + ' as a ' + type);
     }
+    symbol = SymbolTable.getSymbol(symID);
+    symbol.data.type = type;
     node.type = type;
   },
 
   addKnownReturnType: function(symID, returnType) {
-    var node = resolved[symID];
+    var node = resolved[symID],
+        symbol;
     if (!node) {
       node = resolved[symID] = {
         ID: symID,
@@ -50,6 +44,8 @@ var TypeInference = {
     if (node.returnType !== null && node.returnType !== returnType) {
       throw new Error('Must return a ' + node.returnType + ', not a ' + returnType);
     }
+    symbol = SymbolTable.getSymbol(symID);
+    symbol.data.returnType = returnType;
     node.returnType = returnType;
   },
 
@@ -81,9 +77,6 @@ var TypeInference = {
     }
   },
 
-  /**
-   * TODO: Does not handle cycles
-   */
   resolve: function(node) {
     if (!node) {
       for (var id in unresolved) {
@@ -169,12 +162,18 @@ var TypeInference = {
           type += returnType;
         }
       }
+
       resolved[node.ID] = {
         ID: node.ID,
         type: type,
         returnType: returnType
       };
       delete unresolved[node.ID];
+
+      // Save the changes to the actual symbol
+      var symbol = SymbolTable.getSymbol(node.ID);
+      symbol.data.type = type;
+      symbol.data.returnType = type;
     }
   }
 };
