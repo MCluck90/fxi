@@ -6,14 +6,13 @@ var SymbolTable = require('./symbol-table.js'),
     seen = [],
 
 TypeInference = {
-  print: function() {
-    console.log('Unresolved');
-    console.log(unresolved);
-    console.log('\nResolved');
-    console.log(resolved);
-  },
+  enabled: false,
 
   addKnownType: function(symID, type) {
+    if (!this.enabled) {
+      return;
+    }
+
     var node = resolved[symID],
         symbol;
     if (!node) {
@@ -32,6 +31,10 @@ TypeInference = {
   },
 
   addKnownReturnType: function(symID, returnType) {
+    if (!this.enabled) {
+      return;
+    }
+
     var node = resolved[symID],
         symbol;
     if (!node) {
@@ -50,6 +53,10 @@ TypeInference = {
   },
 
   addTypeDependency: function(unresolvedID, dependentID) {
+    if (!this.enabled) {
+      return;
+    }
+
     var node = unresolved[unresolvedID];
     if (!node) {
       node = unresolved[unresolvedID] = {
@@ -64,6 +71,10 @@ TypeInference = {
   },
 
   addReturnTypeDependency: function(unresolvedID, dependentID) {
+    if (!this.enabled) {
+      return;
+    }
+
     var node = unresolved[unresolvedID];
     if (!node) {
       node = unresolved[unresolvedID] = {
@@ -78,6 +89,10 @@ TypeInference = {
   },
 
   resolve: function(node) {
+    if (!this.enabled) {
+      return;
+    }
+    
     if (!node) {
       for (var id in unresolved) {
         TypeInference.resolve(unresolved[id]);
