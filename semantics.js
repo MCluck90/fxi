@@ -264,6 +264,21 @@ Semantics = {
     // Pop off the BAL
     Stack.action.pop();
 
+    // Infer types for the parameters
+    var funcSar = Stack.action.top,
+        params = SymbolTable.getSymbol(funcSar.ID).data.params.slice().reverse(),
+        args = argList.args,
+        numOfArgs = args.length;
+    if (numOfArgs !== params.length) {
+      throwSemanticError('Expected ' + params.length + ' arguments, got ' + numOfArgs);
+    } else if (TypeInference.enabled) {
+      for (var i = 0; i < numOfArgs; i++) {
+        var arg = args[i],
+            param = params[i];
+        TypeInference.addTypeDependency(param.ID, arg.ID);
+      }
+    }
+
     Stack.action.push(argList);
   },
 
@@ -418,7 +433,7 @@ Semantics = {
       force = true;
     }
 
-    while (Stack.operator.length) {
+    while (Stack.operator.length && Stack.operator.top !== '(') {
       var op = Stack.operator.pop();
       Semantics[op]();
     }

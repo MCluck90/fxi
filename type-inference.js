@@ -134,8 +134,8 @@ TypeInference = {
         } else if (unresolvedNode) {
           TypeInference.resolve(unresolvedNode);
           resolvedNode = resolved[id];
-          if (resolveNode && resolveNode.type) {
-            newType = resolveNode.type;
+          if (resolvedNode && resolvedNode.type) {
+            newType = resolvedNode.type;
           }
         } else {
           throw new Error('Unable to determine type for ' + unresolvedNode.value);
