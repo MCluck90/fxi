@@ -12,7 +12,8 @@ function TypeNode(id, type, returnType) {
 }
 
 var resolved = {},
-    unresolved = {};
+    unresolved = {},
+    seen = [];
 
 var TypeInference = {
   print: function() {
@@ -26,6 +27,7 @@ var TypeInference = {
     var node = resolved[symID];
     if (!node) {
       node = resolved[symID] = {
+        ID: symID,
         type: null,
         returnType: null
       };
@@ -40,6 +42,7 @@ var TypeInference = {
     var node = resolved[symID];
     if (!node) {
       node = resolved[symID] = {
+        ID: symID,
         type: null,
         returnType: null
       };
@@ -54,6 +57,7 @@ var TypeInference = {
     var node = unresolved[unresolvedID];
     if (!node) {
       node = unresolved[unresolvedID] = {
+        ID: unresolvedID,
         type: [],
         returnType: []
       };
@@ -67,6 +71,7 @@ var TypeInference = {
     var node = unresolved[unresolvedID];
     if (!node) {
       node = unresolved[unresolvedID] = {
+        ID: unresolvedID,
         type: [],
         returnType: []
       };
@@ -79,65 +84,81 @@ var TypeInference = {
   /**
    * TODO: Does not handle cycles
    */
-  resolve: function() {
-    var unresolvedIDs = Object.keys(unresolved);
-    while (unresolvedIDs.length) {
-      var nodeID = unresolvedIDs[unresolvedIDs.length - 1],
-          node = unresolved[nodeID],
-          typeDependencies = node.type,
-          returnTypeDependencies = node.returnType,
-          newType = null,
-          newReturnType = null;
-      for (var i = 0; i < typeDependencies.length; i++) {
-        var typeID = typeDependencies[i];
-        if (!resolved[typeID]) {
-          continue;
-        }
-        if (!resolved[typeID].type) {
-          console.log('Warn: Unresolved type in resolved set -> ' + typeID);
-          continue;
-        }
-        var resolvedType = resolved[typeID].type;
-        if (nodeID.indexOf('FN') === 0) {
-          newType = newType || '(';
-          if (newType.length > 1) {
-            newType += ',';
+  resolve: function(node) {
+    if (!node) {
+      for (var id in unresolved) {
+        TypeInference.resolve(unresolved[id]);
+      }
+    } else if (seen.indexOf(node.ID) === -1) {
+      seen.push(node.ID);
+      var isFunction = node.ID.indexOf('FN') === 0,
+          type = (isFunction) ? '(' : null,
+          returnType = null;
+      node.type.forEach(function(id) {
+        var resolvedNode = resolved[id],
+            unresolvedNode = unresolved[id],
+            newType;
+        if (resolvedNode) {
+          newType = resolvedNode.type;
+        } else if (unresolvedNode) {
+          TypeInference.resolve(unresolvedNode);
+          resolvedNode = resolved[id];
+          if (!resolvedNode || !resolvedNode.type) {
+            throw new Error('Unable to determine type for ' + id);
           }
-          newType += resolvedType;
+          newType = resolvedNode.type;
         } else {
-          if (newType && resolvedType !== newType) {
-            throw new Error('Conflicting types: ' + newType + ', ' + resolvedType);
-          }
-          newType = resolvedType;
+          throw new Error('Unable to determine type for ' + id);
         }
-      }
-      for (var i = 0; i < returnTypeDependencies.length; i++) {
-        var returnTypeID = returnTypeDependencies[i];
-        if (!resolved[returnTypeID]) {
-          continue;
-        }
-        if (!resolved[returnTypeID].type) {
-          console.log('Warn: Unresolved return type in resolved set -> ' + returnTypeID);
-          continue;
-        }
-        var resolvedReturnType = resolved[returnTypeID].type;
-        if (newReturnType && resolvedReturnType !== newReturnType) {
-          throw new Error('Conflicting types: ' + newReturnType + ', ' + resolvedReturnType);
-        }
-        newReturnType = resolvedReturnType;
-      }
 
-      if ((newType || !typeDependencies.length) && (newReturnType || !returnTypeDependencies.length)) {
-        if (nodeID.indexOf('FN') === 0) {
-          newType += ')->' + newReturnType;
+        if (isFunction) {
+          // Compile the parameters into a type
+          if (type.length > 1) {
+            type += ',';
+          }
+          type += newType;
+        } else {
+          if (type && newType !== type) {
+            throw new Error('Conflicting types: ' + type + ', ' + newType);
+          }
+          type = newType;
         }
-        resolved[nodeID] = {
-          type: newType,
-          returnType: newReturnType
-        };
-        delete unresolved[nodeID];
-        unresolvedIDs.pop();
+      });
+
+      node.returnType.forEach(function(id) {
+        var resolvedNode = resolved[id],
+            unresolvedNode = unresolved[id],
+            newReturnType;
+        if (resolvedNode) {
+          newReturnType = resolvedNode.type;
+        } else if (unresolvedNode) {
+          TypeInference.resolve(unresolvedNode);
+          resolvedNode = resolved[id];
+          if (!resolvedNode || !resolvedNode.type) {
+            throw new Error('Unable to determine type for ' + id);
+          }
+        } else {
+          throw new Error('Unable to determine type for ' + id);
+        }
+
+        if (returnType && newReturnType !== returnType) {
+          throw new Error('Conflicting types: ' + returnType + ', ' + newReturnType);
+        }
+        returnType = newReturnType;
+      });
+
+      if (!type && !returnType) {
+        throw new Error('Unable to determine type for ' + node.ID);
       }
+      if (isFunction) {
+        type += ')->' + returnType;
+      }
+      resolved[node.ID] = {
+        ID: node.ID,
+        type: type,
+        returnType: returnType
+      };
+      delete unresolved[node.ID];
     }
   }
 };
@@ -158,7 +179,8 @@ TypeInference.addKnownType('TE003', 'int');
 TypeInference.addKnownType('TE005', 'int');
 TypeInference.addKnownType('TE006', 'int');
 TypeInference.addReturnTypeDependency('FN001', 'TE006');
-TypeInference.addKnownType('CH001', 'char');
+
+//TypeInference.addReturnTypeDependency('FN002', 'FN002');
 console.log('<Pre-Resolve>');
 TypeInference.print();
 console.log('</Pre-Resolve>\n\n');
