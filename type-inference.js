@@ -91,7 +91,7 @@ var TypeInference = {
       }
     } else if (seen.indexOf(node.ID) === -1) {
       seen.push(node.ID);
-      var isFunction = node.ID.indexOf('FN') === 0,
+      var isFunction = node.ID.indexOf('FN') === 0 || node.ID.indexOf('LA') === 0,
           type = (isFunction) ? '(' : null,
           returnType = null;
       node.type.forEach(function(id) {
@@ -125,6 +125,10 @@ var TypeInference = {
         }
       });
 
+      if (isFunction) {
+        type += ')->';
+      }
+
       node.returnType.forEach(function(id) {
         var resolvedNode = resolved[id],
             unresolvedNode = unresolved[id],
@@ -134,8 +138,13 @@ var TypeInference = {
         } else if (unresolvedNode) {
           TypeInference.resolve(unresolvedNode);
           resolvedNode = resolved[id];
-          if (!resolvedNode || !resolvedNode.type) {
+          if (id === node.ID) {
+            // Does it recurse on itself? Create a recursive return type
+            newReturnType = '...';
+          } else if (!resolvedNode || !resolvedNode.type) {
             throw new Error('Unable to determine type for ' + id);
+          } else {
+            newReturnType = resolvedNode.type;
           }
         } else {
           throw new Error('Unable to determine type for ' + id);
@@ -151,7 +160,14 @@ var TypeInference = {
         throw new Error('Unable to determine type for ' + node.ID);
       }
       if (isFunction) {
-        type += ')->' + returnType;
+        returnType = returnType || 'void';
+        if (returnType === '...') {
+          // Recursive data type
+          type += returnType;
+          returnType = type;
+        } else {
+          type += returnType;
+        }
       }
       resolved[node.ID] = {
         ID: node.ID,
@@ -162,31 +178,5 @@ var TypeInference = {
     }
   }
 };
-
-TypeInference.addTypeDependency('FN001', 'PA001');
-TypeInference.addKnownType('NU001', 'int');
-TypeInference.addKnownType('PA001', 'int');
-TypeInference.addReturnTypeDependency('FN001', 'PA001');
-TypeInference.addKnownType('NU001', 'int');
-TypeInference.addKnownType('PA001', 'int');
-TypeInference.addKnownType('TE002', 'int');
-TypeInference.addReturnTypeDependency('FN001', 'TE003');
-TypeInference.addKnownType('NU002', 'int');
-TypeInference.addKnownType('PA001', 'int');
-TypeInference.addKnownType('TE004', 'int');
-TypeInference.addReturnTypeDependency('FN001', 'TE004');
-TypeInference.addKnownType('TE003', 'int');
-TypeInference.addKnownType('TE005', 'int');
-TypeInference.addKnownType('TE006', 'int');
-TypeInference.addReturnTypeDependency('FN001', 'TE006');
-
-//TypeInference.addReturnTypeDependency('FN002', 'FN002');
-console.log('<Pre-Resolve>');
-TypeInference.print();
-console.log('</Pre-Resolve>\n\n');
-TypeInference.resolve();
-console.log('<Post-Resolve>');
-TypeInference.print();
-console.log('</Post-Resolve>');
 
 module.exports = TypeInference;
