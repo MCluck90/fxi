@@ -8,6 +8,11 @@ var SymbolTable = require('./symbol-table.js'),
 TypeInference = {
   enabled: false,
 
+  /**
+   * States that the type of a symbol is known
+   * @param {string} symID  Symbol ID for the known symbol
+   * @param {string} type   Type of the symbol
+   */
   addKnownType: function(symID, type) {
     if (!this.enabled) {
       return;
@@ -43,6 +48,11 @@ TypeInference = {
     }
   },
 
+  /**
+   * States that the return type for a symbol is known
+   * @param {string} symID      Symbol ID for the known symbol
+   * @param {string} returnType Return type of the symbol
+   */
   addKnownReturnType: function(symID, returnType) {
     if (!this.enabled) {
       return;
@@ -77,6 +87,13 @@ TypeInference = {
     }
   },
 
+  /**
+   * Adds a type dependency to a symbol
+   * This is also used for parameters as a functions type string
+   * is a combination of it's parameters and it's return type
+   * @param {string} unresolvedID   Symbol whos type is not yet known
+   * @param {string} dependentID    Symbol whos type will determine the type of unresolvedID
+   */
   addTypeDependency: function(unresolvedID, dependentID) {
     if (!this.enabled || resolved[unresolvedID]) {
       return;
@@ -104,6 +121,11 @@ TypeInference = {
     }
   },
 
+  /**
+   * Adds a return type dependency to a symbol
+   * @param {string} unresolvedID   Symbol whos type is not yet known
+   * @param {string} dependentID    Symbol whos type will determine the type of unresolvedID
+   */
   addReturnTypeDependency: function(unresolvedID, dependentID) {
     if (!this.enabled || resolved[unresolvedID]) {
       return;
@@ -131,6 +153,10 @@ TypeInference = {
     }
   },
 
+  /**
+   * Resolves the types for all known symbols
+   * @param {Node} node Current node to resolve
+   */
   resolve: function(node) {
     if (!this.enabled) {
       return;
@@ -145,6 +171,9 @@ TypeInference = {
       var isFunction = node.ID.indexOf('FN') === 0 || node.ID.indexOf('LA') === 0,
           type = (isFunction) ? '(' : null,
           returnType;
+
+      // Check through each of it's type dependencies
+      // to determine the type of the symbol
       node.type.forEach(function(id) {
         var resolvedNode = resolved[id],
             unresolvedNode = unresolved[id],
@@ -181,6 +210,8 @@ TypeInference = {
         type += ')->';
       }
 
+      // Check through each of it's return type dependencies
+      // to determine the return type of the symbol
       node.returnType.forEach(function(id) {
         var resolvedNode = resolved[id],
             unresolvedNode = unresolved[id],
