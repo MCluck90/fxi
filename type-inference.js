@@ -23,9 +23,12 @@ TypeInference = {
         value: symbol.value
       };
     }
+
     if (node.type !== null && node.type !== type) {
-      throw new Error('Cannot use a ' + node.type + ' as a ' + type);
+      // Ignore mismatching for now, will be reported in semantics
+      return;
     }
+
     symbol = SymbolTable.getSymbol(symID);
     symbol.data.type = type;
     node.type = type;
@@ -55,9 +58,12 @@ TypeInference = {
         value: symbol.value
       };
     }
+
     if (node.returnType !== null && node.returnType !== returnType) {
-      throw new Error('Must return a ' + node.returnType + ', not a ' + returnType);
+      // Ignore mismatching for now, will be reported in semantics
+      return;
     }
+
     symbol.data.returnType = returnType;
     node.returnType = returnType;
 
@@ -73,6 +79,13 @@ TypeInference = {
 
   addTypeDependency: function(unresolvedID, dependentID) {
     if (!this.enabled || resolved[unresolvedID]) {
+      return;
+    }
+
+    // If the dependent is already known, use that
+    var resolvedNode = resolved[dependentID];
+    if (resolvedNode && resolvedNode.type) {
+      this.addKnownType(unresolvedID, resolvedNode.type);
       return;
     }
 
@@ -93,6 +106,13 @@ TypeInference = {
 
   addReturnTypeDependency: function(unresolvedID, dependentID) {
     if (!this.enabled || resolved[unresolvedID]) {
+      return;
+    }
+
+    // If the dependent is already known, use that
+    var resolvedNode = resolved[dependentID];
+    if (resolvedNode && resolvedNode.type) {
+      this.addKnownType(unresolvedID, resolvedNode.type);
       return;
     }
 
@@ -124,7 +144,7 @@ TypeInference = {
       seen.push(node.ID);
       var isFunction = node.ID.indexOf('FN') === 0 || node.ID.indexOf('LA') === 0,
           type = (isFunction) ? '(' : null,
-          returnType = null;
+          returnType;
       node.type.forEach(function(id) {
         var resolvedNode = resolved[id],
             unresolvedNode = unresolved[id],
@@ -138,7 +158,8 @@ TypeInference = {
             newType = resolvedNode.type;
           }
         } else {
-          throw new Error('Unable to determine type for ' + unresolvedNode.value);
+          // Could not determine type, will be reported in semantics
+          return;
         }
 
         if (isFunction) {
@@ -149,7 +170,8 @@ TypeInference = {
           type += newType;
         } else {
           if (type && newType !== type) {
-            throw new Error('Conflicting types: (' + type + ' vs. ' + newType + ') for ' + resolvedNode.value);
+            // Type mismatched, will be reported in semantics
+            return;
           }
           type = newType;
         }
@@ -171,26 +193,30 @@ TypeInference = {
           if (id === node.ID) {
             // Does it recurse on itself? Create a recursive return type
             newReturnType = '...';
-          } else if (!resolvedNode || !resolvedNode.type) {
-            throw new Error('Unable to determine type for ' + unresolvedNode.value);
-          } else {
+          } else if (resolvedNode && resolvedNode.type) {
             newReturnType = resolvedNode.type;
+          } else {
+            // Could not determine type, will be reported in semantics
+            return;
           }
         } else {
-          throw new Error('Unable to determine type for ' + unresolvedNode.value);
+          //throw new Error('Unable to determine type for ' + unresolvedNode.value);
+          return;
         }
 
         if (returnType && newReturnType !== returnType) {
-          throw new Error('Conflicting types: (' + returnType + ' vs. ' + newReturnType + ') for ' + resolvedNode.value);
+          // Type mismatched, will be reported in semantics
+          return;
         }
         returnType = newReturnType;
       });
 
       if (!type && !returnType) {
-        throw new Error('Unable to determine type for ' + node.value);
+        // Could not determine type, will be reported in semantics
+        return;
       }
+
       if (isFunction) {
-        returnType = returnType || 'void';
         if (returnType === '...') {
           // Recursive data type
           type += returnType;

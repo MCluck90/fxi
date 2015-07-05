@@ -3,6 +3,7 @@
 var ICode = require('./icode.js'),
     Stack = require('./semantic-stack.js'),
     SymbolTable = require('./symbol-table.js'),
+    SymbolTypes = SymbolTable.SymbolTypes,
     SAR = require('./sars/index.js'),
     TypeInference = require('./type-inference.js'),
     Semantics;
@@ -33,6 +34,11 @@ Semantics = {
 
     var symbol = SymbolTable().findSymbol(identifier);
     if (symbol) {
+      if (symbol.data.type === null) {
+        throwSemanticError('Cannot determine type for ' + symbol.value);
+      } else if (symbol.data.returnType === null) {
+        throwSemanticError('Cannot determine return type for ' + symbol.value);
+      }
       Stack.action.push(new SAR.Identifier(symbol));
     } else {
       Stack.action.push(new SAR.Identifier(identifier));
@@ -156,28 +162,7 @@ Semantics = {
       return;
     }
 
-    var scope = Stack.scope.pop(),
-        symbol = scope.symbol,
-        returnType = scope.returnType || 'void',
-        params = scope.params;
-
-    if (!scope.type) {
-      // Determine a type string from the scope
-      var typeString = '(';
-      //var typeString = '<' + returnType + '>' + ' : (';
-      for (var i = 0, len = params.length; i < len; i++) {
-        if (i > 0) {
-          typeString += ',';
-        }
-        typeString += params[i].data.type;
-      }
-      typeString += ')->' + returnType;
-      symbol.data.type = typeString;
-      scope.type = typeString;
-    }
-
-    symbol.data.returnType = returnType;
-    Stack.action.push(scope);
+    Stack.action.push(Stack.scope.pop());
   },
 
   /**
@@ -370,7 +355,7 @@ Semantics = {
 
     this.EOE(false);
     var expression = Stack.action.pop();
-    if (expression.type !== 'char' && expression.type !== 'bool') {
+    if (expression.type !== 'char' && expression.type !== 'int') {
       throwSemanticError('Cannot write out type ' + expression.type + '. Must be a char or an int');
     }
     ICode.Write(expression);
@@ -385,7 +370,7 @@ Semantics = {
     }
 
     var expression = Stack.action.pop();
-    if (expression.type !== 'char' && expression.type !== 'bool') {
+    if (expression.type !== 'char' && expression.type !== 'int') {
       throwSemanticError('Cannot read to type ' + expression.type + '. Must be a char or an int');
     }
   },
@@ -402,7 +387,16 @@ Semantics = {
       return;
     }
 
-    throw new Error('Not yet implemented');
+    var expression = Stack.action.pop(),
+        temp = new SAR.Temp('int');
+
+    TypeInference.addKnownType(expression.ID, 'char');
+    TypeInference.addKnownType(temp.ID, 'int');
+    if (expression.type !== 'char') {
+      throwSemanticError('Cannot convert ' + expression.type + ' to an int, must be a char');
+    }
+
+    Stack.action.push(temp);
   },
 
   /**
@@ -413,7 +407,16 @@ Semantics = {
       return;
     }
 
-    throw new Error('Not yet implemented');
+    var expression = Stack.action.pop(),
+        temp = new SAR.Temp('char');
+
+    TypeInference.addKnownType(expression.ID, 'int');
+    TypeInference.addKnownType(temp.ID, 'char');
+    if (expression.type !== 'int') {
+      throwSemanticError('Cannot convert ' + expression.type + ' to a char, must be a int');
+    }
+
+    Stack.action.push(temp);
   },
 
   /***************
@@ -457,6 +460,20 @@ Semantics = {
     TypeInference.addKnownType(a.ID, 'int');
     TypeInference.addKnownType(b.ID, 'int');
     TypeInference.addKnownType(temp.ID, 'int');
+
+    if (a.type !== 'int' || b.type !== 'int') {
+      var aSymbol = SymbolTable.getSymbol(a.ID),
+          bSymbol = SymbolTable.getSymbol(b.ID),
+          identifier;
+      if (a.type !== 'int' && aSymbol.type !== SymbolTypes.Temp) {
+        identifier = aSymbol.value;
+      } else if (b.type !== 'int' && bSymbol.type !== SymbolTypes.Temp) {
+        identifier = bSymbol.value;
+      } else {
+        identifier = 'Expression';
+      }
+      throwSemanticError(identifier + ' is not an integer');
+    }
     Stack.action.push(temp);
 
     return {
@@ -521,6 +538,9 @@ Semantics = {
         lhs = Stack.action.pop();
 
     TypeInference.addTypeDependency(lhs.ID, rhs.ID);
+    if (lhs.type !== rhs.type) {
+      throwSemanticError(lhs.value + ' is of type ' + lhs.type + ', cannot assign a ' + rhs.type);
+    }
   },
 
   /**********************
@@ -542,6 +562,21 @@ Semantics = {
     TypeInference.addKnownType(expressionA.ID, 'int');
     TypeInference.addKnownType(expressionB.ID, 'int');
     TypeInference.addKnownType(temp.ID, 'bool');
+
+    if (expressionA.type !== 'int' || expressionB.type !== 'int') {
+      var aSymbol = SymbolTable.getSymbol(expressionA.ID),
+          bSymbol = SymbolTable.getSymbol(expressionB.ID),
+          identifier;
+      if (expressionA.type !== 'int' && aSymbol.type !== SymbolTypes.Temp) {
+        identifier = aSymbol.value;
+      } else if (expressionB.type !== 'int' && bSymbol.type !== SymbolTypes.Temp) {
+        identifier = bSymbol.value;
+      } else {
+        identifier = 'Expression';
+      }
+      throwSemanticError(identifier + ' must be an integer for comparisons');
+    }
+
     Stack.action.push(temp);
   },
 
@@ -593,6 +628,21 @@ Semantics = {
     TypeInference.addKnownType(expressionA.ID, 'bool');
     TypeInference.addKnownType(expressionB.ID, 'bool');
     TypeInference.addKnownType(temp.ID, 'bool');
+
+    if (expressionA.type !== 'bool' || expressionB.type !== 'bool') {
+      var aSymbol = SymbolTable.getSymbol(expressionA.ID),
+          bSymbol = SymbolTable.getSymbol(expressionB.ID),
+          identifier;
+      if (expressionA.type !== 'bool' && aSymbol.type !== SymbolTypes.Temp) {
+        identifier = aSymbol.value;
+      } else if (expressionB.type !== 'bool' && bSymbol.type !== SymbolTypes.Temp) {
+        identifier = bSymbol.value;
+      } else {
+        identifier = 'Expression';
+      }
+      throwSemanticError(identifier + ' must be a bool.');
+    }
+
     Stack.action.push(temp);
   },
 
