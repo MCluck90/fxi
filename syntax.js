@@ -130,8 +130,9 @@ var Syntax = {
    */
   type: function(depthCheck, append) {
     if (depthCheck) {
-      return tokens.currentToken.type === TokenTypes.TYPE ||
-             tokens.currentToken.type === TokenTypes.TYPE_ARROW;
+      return tokens.currentToken.type   === TokenTypes.TYPE ||
+             tokens.currentToken.type   === TokenTypes.TYPE_ARROW ||
+             tokens.currentToken.lexeme === '(';
     }
 
     if (tokens.currentToken.type === TokenTypes.TYPE) {
@@ -161,11 +162,12 @@ var Syntax = {
       result += ')';
       checkLexeme('->');
       result += '->';
-      result += this.type(false, true);
+      var returnType = this.type(false, true);
+      result += returnType;
       if (append) {
         return result;
       } else {
-        Semantics.tPush(result, true);
+        Semantics.tPush(result, returnType);
       }
     }
   },

@@ -169,13 +169,16 @@ Semantics = {
    * Pushes a type on to the action stack
    * @param {string} type
    */
-  tPush: function(type) {
+  tPush: function(type, returnType) {
     if (!this.enabled) {
       return;
     }
 
     var idSar = Stack.action.top;
     TypeInference.addKnownType(idSar.ID, type);
+    if (returnType) {
+      TypeInference.addKnownReturnType(idSar.ID, returnType);
+    }
     Stack.action.push(new SAR.Type(type));
   },
 
