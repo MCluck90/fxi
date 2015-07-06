@@ -95,7 +95,7 @@ TypeInference = {
    * @param {string} dependentID    Symbol whos type will determine the type of unresolvedID
    */
   addTypeDependency: function(unresolvedID, dependentID) {
-    if (!this.enabled || resolved[unresolvedID]) {
+    if (!this.enabled) {
       return;
     }
 
@@ -127,14 +127,14 @@ TypeInference = {
    * @param {string} dependentID    Symbol whos type will determine the type of unresolvedID
    */
   addReturnTypeDependency: function(unresolvedID, dependentID) {
-    if (!this.enabled || resolved[unresolvedID]) {
+    if (!this.enabled) {
       return;
     }
 
     // If the dependent is already known, use that
     var resolvedNode = resolved[dependentID];
     if (resolvedNode && resolvedNode.type) {
-      this.addKnownType(unresolvedID, resolvedNode.type);
+      this.addKnownReturnType(unresolvedID, resolvedNode.type);
       return;
     }
 
