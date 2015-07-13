@@ -278,6 +278,50 @@ TypeInference = {
     if (!this.enabled) {
       return;
     }
+
+    var unresolvedNode = unresolved[nodeID],
+        resolvedNode = resolved[nodeID];
+    if (resolvedNode && (resolvedNode.returnType || resolvedNode.isScalar)) {
+      // Return type is already known or it's a scalar
+      // no need to set a return type
+      return;
+    }
+
+    if (!resolvedNode) {
+      resolvedNode = resolved[nodeID] = {
+        ID: nodeID,
+        type: null,
+        params: [],
+        returnType: null
+      };
+    }
+
+    resolvedNode.isFunction = true;
+    resolvedNode.isScalar = false;
+    resolvedNode.returnType = returnType;
+
+    // Apply return type to any return type dependencies
+    if (unresolvedNode) {
+      var returnTypeDependencies = unresolvedNode.returnType || [];
+      delete unresolved[nodeID];
+      returnTypeDependencies.forEach(function(childID) {
+        TypeInference.addKnownType(childID, returnType);
+      });
+    }
+
+    /**
+    Q: What if return type is already known?
+      A: Ignore new type.
+
+    Q: What if type is known to be scalar?
+      A: Ignore new type.
+
+    Q: Can a return type be known without knowing parameters?
+      A: No. Return type will be inferred after function call, where parameters will be inferred.
+
+    Q: After a return type is known, can it be changed?
+      A: No.
+    **/
   },
 
   /**
@@ -337,6 +381,55 @@ TypeInference = {
     if (!this.enabled) {
       return;
     }
+
+    var resolvedChild = resolved[childID];
+    if (resolvedChild && resolvedChild.type) {
+      this.addKnownReturnType(parentID, resolvedChild.type);
+      return;
+    }
+
+    var unresolvedNode = unresolved[parentID],
+        resolvedNode = resolved[parentID];
+    if (resolvedNode) {
+      if (resolvedNode.returnType) {
+        this.addKnownType(childID, resolvedNode.returnType);
+        return;
+      } else if (resolvedNode.isScalar) {
+        return;
+      }
+    } else if (unresolvedNode && unresolvedNode.isScalar) {
+      return;
+    }
+
+    if (!unresolvedNode) {
+      unresolvedNode = unresolved[parentID] = {
+        ID: parentID,
+        type: null,
+        params: [],
+        returnType: null
+      };
+    }
+
+    unresolvedNode.isFunction = true;
+    unresolvedNode.isScalar = false;
+    unresolvedNode.returnType = unresolvedNode.returnType || [];
+    if (unresolvedNode.returnType.indexOf(childID) === -1) {
+      unresolvedNode.returnType.push(childID);
+    }
+
+    /**
+    Q: What if the child type is already known?
+      A: Apply the known type.
+
+    Q: What if return type is known?
+      A: Ignore new type.
+
+    Q: What if type is known to be a scalar?
+      A: Ignore new type.
+
+    Q: What if the return type is already known?
+      A: Flip the dependency, apply the known type to the child.
+    **/
   },
 
   /**
