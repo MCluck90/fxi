@@ -205,6 +205,7 @@ TypeInference = {
       resolvedNode = resolved[nodeID] = {
         ID: nodeID,
         type: type,
+        returnType: null,
         isScalar: true,
         isFunction: false
       };
