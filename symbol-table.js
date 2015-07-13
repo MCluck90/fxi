@@ -217,6 +217,14 @@ SymbolTable.prototype = {
     return scope;
   },
 
+  getAllSymbols: function() {
+    var result = {};
+    Object.keys(allSymbols).forEach(function(id) {
+      result[id] = allSymbols[id];
+    });
+    return result;
+  },
+
   /**
    * Adds a symbol to the table
    * @param {Symbol}  symbol
@@ -389,6 +397,7 @@ SymbolTable.prototype = {
     this._lambdaCount = 0;
     symID = 100;
     tempID = 100;
+    allSymbols = {};
 
     if (isRoot) {
       currentScope = new SymbolTable();
