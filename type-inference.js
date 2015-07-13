@@ -465,6 +465,119 @@ TypeInference = {
     if (!this.enabled) {
       return;
     }
+
+    if (!nodeID) {
+      // Add known types from SymbolTable
+      var allSymbols = SymbolTable().getAllSymbols(),
+          knownSymbols = Object.keys(allSymbols).filter(function(symID) {
+            return allSymbols[symID].data.type || allSymbols[symID].data.returnType;
+          }).map(function(symID) {
+            return {
+              ID: symID,
+              type: allSymbols[symID].data.type,
+              returnType: allSymbols[symID].data.returnType
+            };
+          });
+      knownSymbols.forEach(function(symbolNode) {
+        if (symbolNode.type) {
+          TypeInference.addKnownType(symbolNode.ID, symbolNode.type);
+        }
+        if (symbolNode.returnType) {
+          TypeInference.addKnownReturnType(symbolNode.ID, symbolNode.returnType);
+        }
+      });
+
+      Object.keys(unresolved).forEach(this.resolve.bind(this));
+    } else if (unresolved[nodeID] && seen.indexOf(nodeID) === -1) {
+      seen.push(nodeID);
+      var unresolvedNode = unresolved[nodeID],
+          result = {
+            type: null,
+            params: null,
+            returnType: null,
+            isFunction: null,
+            isScalar: null
+          };
+
+      if (unresolvedNode) {
+        // Unresolved children should be resolved if type is found
+        var typeDependencies = unresolvedNode.type || [],
+            returnTypeDependencies = unresolvedNode.returnType || [],
+            unresolvedTypeChildren = [],
+            unresolvedReturnTypeChildren = [];
+        typeDependencies.forEach(function(childID) {
+          TypeInference.resolve(childID);
+          var resolvedChild = resolved[childID];
+          if (!resolvedChild) {
+            unresolvedTypeChildren.push(childID);
+          } else if (!result.type && resolvedChild.type) {
+            result.type = resolvedChild.type;
+          }
+        });
+        returnTypeDependencies.forEach(function(childID) {
+          TypeInference.resolve(childID);
+          var resolvedChild = resolved[childID];
+          if (!resolvedChild) {
+            unresolvedReturnTypeChildren.push(childID);
+          } else if (!result.returnType && resolvedChild.type) {
+            result.returnType = resolvedChild.type;
+          }
+        });
+
+        if (result.type) {
+          unresolvedTypeChildren.forEach(function(childID) {
+            TypeInference.addKnownType(childID, result.type);
+          });
+          this.addKnownType(nodeID, result.type);
+        }
+        if (result.returnType) {
+          unresolvedTypeChildren.forEach(function(childID) {
+            TypeInference.addKnownType(childID, result.returnType);
+          });
+          this.addKnownReturnType(nodeID, result.returnType);
+        }
+      }
+      /**
+      Q: What if the node is not in the system?
+        A: Ignore it.
+
+      Q: If a type is known, do we check it's dependencies?
+        A: Yes. Resolve dependencies with known type.
+
+        Q: Do such dependencies exist?
+          A: No. If the type is known then dependencies are already processed.
+
+      Q: What if the type dependencies disagree?
+        A: Don't worry about it.
+
+        Q: Should the first resolved type be the definitive type?
+          A: Yes.
+
+        Q: Should the most common type be the final type?
+          A: No.
+
+      Q: What if the type resolves to a function?
+        A: Then process it as a function. Give it parameters and a return type.
+
+        Q: Will dependencies always have parameters and a return type?
+          A: Yes.
+
+        Q: Can the same parameters be used?
+          A: Yes(?). Just generate new parameters. Won't hurt anything.
+
+        Q: Will new parameters have to be made?
+          A: Yes. Will happen automatically through addKnownType.
+
+        Q: What if the parameters couldn't be resolved?
+          A: If type is not known, do not mark it as known.
+
+        Q: Should resolved parameters be added as dependencies to own parameters?
+          A: No.
+
+        Q: What if return types don't resolve to the same type?
+          A: Doesn't matter. Take the first one.
+      **/
+    }
   }
 };
 

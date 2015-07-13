@@ -678,4 +678,419 @@ describe('Type Inference', function() {
       });
     }); // Known Types
   }); // addReturnTypeDependency
+
+  describe('resolve', function() {
+    it('should automatically insert all known types as resolved nodes', function() {
+      var allSymbols = SymbolTable().getAllSymbols(),
+          knownTypes = Object.keys(allSymbols).filter(function(id) {
+            return allSymbols[id].data.type;
+          }).map(function(id) {
+            return {
+              ID: id,
+              type: allSymbols[id].data.type
+            };
+          });
+      expect(knownTypes).to.not.be.empty();
+      knownTypes.forEach(function(symbol) {
+        expect(typeState.resolved).to.not.have.key(symbol.ID);
+      });
+      TypeInference.resolve();
+      knownTypes.forEach(function(symbol) {
+        expect(typeState.resolved).to.have.key(symbol.ID);
+        expect(typeState.resolved[symbol.ID].type).to.be(symbol.type);
+      });
+    });
+
+    describe('Basic Resolution', function() {
+      describe('Child Type Known', function() {
+        describe('Type', function() {
+          it('should resolve the parent\'s type to the child\'s type', function() {
+            var parentID = getRandomID(),
+                childID = getRandomID(),
+                childType = getRandomType(),
+                parentNode,
+                childNode;
+
+            createSymbol(parentID);
+            createSymbol(childID);
+            TypeInference.addTypeDependency(parentID, childID);
+            TypeInference.addKnownType(childID, childType);
+
+            TypeInference.resolve();
+
+            expect(typeState.resolved).to.have.key(parentID);
+            parentNode = typeState.resolved[parentID];
+            childNode = typeState.resolved[childID];
+            expect(childNode.type).to.be(childType);
+            expect(parentNode.type).to.be(childNode.type);
+          });
+
+          it('should resolve the grandparent\'s type to the child\'s type', function() {
+            var grandparentID = getRandomID(),
+                parentID = getRandomID(),
+                childID = getRandomID(),
+                childType = getRandomType(),
+                grandparentNode,
+                childNode;
+
+            createSymbol(parentID);
+            createSymbol(childID);
+            TypeInference.addTypeDependency(grandparentID, parentID);
+            TypeInference.addTypeDependency(parentID, childID);
+            TypeInference.addKnownType(childID, childType);
+
+            TypeInference.resolve();
+
+            expect(typeState.resolved).to.have.key(grandparentID);
+            grandparentNode = typeState.resolved[grandparentID];
+            childNode = typeState.resolved[childID];
+            expect(childNode.type).to.be(childType);
+            expect(grandparentNode.type).to.be(childNode.type);
+          });
+
+          it('should resolve the great-grandparent\'s type to the child\'s type', function() {
+            var greatGrandparentID = getRandomID(),
+                grandparentID = getRandomID(),
+                parentID = getRandomID(),
+                childID = getRandomID(),
+                childType = getRandomType(),
+                greatGrandparentNode,
+                childNode;
+
+            createSymbol(parentID);
+            createSymbol(childID);
+            TypeInference.addTypeDependency(greatGrandparentID, grandparentID);
+            TypeInference.addTypeDependency(grandparentID, parentID);
+            TypeInference.addTypeDependency(parentID, childID);
+            TypeInference.addKnownType(childID, childType);
+
+            TypeInference.resolve();
+
+            expect(typeState.resolved).to.have.key(greatGrandparentID);
+            greatGrandparentNode = typeState.resolved[greatGrandparentID];
+            childNode = typeState.resolved[childID];
+            expect(childNode.type).to.be(childType);
+            expect(greatGrandparentNode.type).to.be(childNode.type);
+          });
+        }); // Type
+
+        describe('Return Type', function() {
+          it('should resolve the parent\'s type to the child\'s type', function() {
+            var parentID = getRandomID(),
+                childID = getRandomID(),
+                childType = getRandomType(),
+                parentNode,
+                childNode;
+
+            createSymbol(parentID);
+            createSymbol(childID);
+            TypeInference.addReturnTypeDependency(parentID, childID);
+            TypeInference.addKnownType(childID, childType);
+
+            TypeInference.resolve();
+
+            expect(typeState.resolved).to.have.key(parentID);
+            parentNode = typeState.resolved[parentID];
+            childNode = typeState.resolved[childID];
+            expect(childNode.type).to.be(childType);
+            expect(parentNode.returnType).to.be(childNode.type);
+          });
+
+          it('should resolve the grandparent\'s type to the child\'s type', function() {
+            var grandparentID = getRandomID(),
+                parentID = getRandomID(),
+                childID = getRandomID(),
+                childType = getRandomType(),
+                grandparentNode,
+                childNode;
+
+            createSymbol(parentID);
+            createSymbol(childID);
+            TypeInference.addReturnTypeDependency(grandparentID, parentID);
+            TypeInference.addTypeDependency(parentID, childID);
+            TypeInference.addKnownType(childID, childType);
+
+            TypeInference.resolve();
+
+            expect(typeState.resolved).to.have.key(grandparentID);
+            grandparentNode = typeState.resolved[grandparentID];
+            childNode = typeState.resolved[childID];
+            expect(childNode.type).to.be(childType);
+            expect(grandparentNode.returnType).to.be(childNode.type);
+          });
+
+          it('should resolve the great-grandparent\'s type to the child\'s type', function() {
+            var greatGrandparentID = getRandomID(),
+                grandparentID = getRandomID(),
+                parentID = getRandomID(),
+                childID = getRandomID(),
+                childType = getRandomType(),
+                greatGrandparentNode,
+                childNode;
+
+            createSymbol(parentID);
+            createSymbol(childID);
+            TypeInference.addReturnTypeDependency(greatGrandparentID, grandparentID);
+            TypeInference.addTypeDependency(grandparentID, parentID);
+            TypeInference.addTypeDependency(parentID, childID);
+            TypeInference.addKnownType(childID, childType);
+
+            TypeInference.resolve();
+
+            expect(typeState.resolved).to.have.key(greatGrandparentID);
+            greatGrandparentNode = typeState.resolved[greatGrandparentID];
+            childNode = typeState.resolved[childID];
+            expect(childNode.type).to.be(childType);
+            expect(greatGrandparentNode.returnType).to.be(childNode.type);
+          });
+        }); // Return Type
+      }); // Child Type Known
+
+      describe('Child Type Unknown', function() {
+        describe('Type', function() {
+          it('should not resolve the parent\'s type', function() {
+            var parentID = getRandomID(),
+                childID = getRandomID(),
+                childType = getRandomType(),
+                parentNode,
+                childNode;
+
+            createSymbol(parentID);
+            createSymbol(childID);
+            TypeInference.addTypeDependency(parentID, childID);
+
+            TypeInference.resolve();
+
+            expect(typeState.resolved).to.not.have.key(parentID);
+          });
+
+          it('should not resolve the grandparent\'s type', function() {
+            var grandparentID = getRandomID(),
+                parentID = getRandomID(),
+                childID = getRandomID(),
+                childType = getRandomType(),
+                grandparentNode,
+                childNode;
+
+            createSymbol(parentID);
+            createSymbol(childID);
+            TypeInference.addTypeDependency(grandparentID, parentID);
+            TypeInference.addTypeDependency(parentID, childID);
+
+            TypeInference.resolve();
+
+            expect(typeState.resolved).to.not.have.key(grandparentID);
+          });
+
+          it('should not resolve the great-grandparent\'s type', function() {
+            var greatGrandparentID = getRandomID(),
+                grandparentID = getRandomID(),
+                parentID = getRandomID(),
+                childID = getRandomID(),
+                childType = getRandomType(),
+                greatGrandparentNode,
+                childNode;
+
+            createSymbol(parentID);
+            createSymbol(childID);
+            TypeInference.addTypeDependency(greatGrandparentID, grandparentID);
+            TypeInference.addTypeDependency(grandparentID, parentID);
+            TypeInference.addTypeDependency(parentID, childID);
+
+            TypeInference.resolve();
+
+            expect(typeState.resolved).to.not.have.key(greatGrandparentID);
+          });
+        }); // Type
+
+        describe('Return Type', function() {
+          it('should not resolve the parent\'s type', function() {
+            var parentID = getRandomID(),
+                childID = getRandomID(),
+                childType = getRandomType(),
+                parentNode,
+                childNode;
+
+            createSymbol(parentID);
+            createSymbol(childID);
+            TypeInference.addReturnTypeDependency(parentID, childID);
+
+            TypeInference.resolve();
+
+            expect(typeState.resolved).to.not.have.key(parentID);
+          });
+
+          it('should not resolve the grandparent\'s type', function() {
+            var grandparentID = getRandomID(),
+                parentID = getRandomID(),
+                childID = getRandomID(),
+                childType = getRandomType(),
+                grandparentNode,
+                childNode;
+
+            createSymbol(parentID);
+            createSymbol(childID);
+            TypeInference.addReturnTypeDependency(grandparentID, parentID);
+            TypeInference.addTypeDependency(parentID, childID);
+
+            TypeInference.resolve();
+
+            expect(typeState.resolved).to.not.have.key(grandparentID);
+          });
+
+          it('should not resolve the great-grandparent\'s type', function() {
+            var greatGrandparentID = getRandomID(),
+                grandparentID = getRandomID(),
+                parentID = getRandomID(),
+                childID = getRandomID(),
+                childType = getRandomType(),
+                greatGrandparentNode,
+                childNode;
+
+            createSymbol(parentID);
+            createSymbol(childID);
+            TypeInference.addReturnTypeDependency(greatGrandparentID, grandparentID);
+            TypeInference.addTypeDependency(grandparentID, parentID);
+            TypeInference.addTypeDependency(parentID, childID);
+
+            TypeInference.resolve();
+
+            expect(typeState.resolved).to.not.have.key(greatGrandparentID);
+          });
+        }); // Return Type
+      }); // Child Type Unknown
+
+      describe('Sibling Known', function() {
+        describe('Type', function() {
+          it('should resolve a childs type to it\'s siblings type when the type cannot be resolved', function() {
+            var parentID = getRandomID(),
+                childID = getRandomID(),
+                siblingID = getRandomID(),
+                siblingType = getRandomType();
+
+            createSymbol(parentID);
+            createSymbol(childID);
+            createSymbol(siblingID);
+
+            TypeInference.addTypeDependency(parentID, childID);
+            TypeInference.addTypeDependency(parentID, siblingID);
+            TypeInference.addKnownType(siblingID, siblingType);
+            TypeInference.resolve();
+            expect(typeState.resolved).to.have.key(childID);
+            expect(typeState.resolved[childID].type).to.be(siblingType);
+          });
+
+          it('should not overwrite a childs type if it\'s siblings type is known', function() {
+            var parentID = getRandomID(),
+                childID = getRandomID(),
+                siblingID = getRandomID(),
+                childType = getRandomType(),
+                siblingType = getRandomType();
+            while (siblingType === childType) {
+              siblingType = getRandomType();
+            }
+
+            createSymbol(parentID);
+            createSymbol(childID);
+            createSymbol(siblingID);
+
+            TypeInference.addTypeDependency(parentID, childID);
+            TypeInference.addTypeDependency(parentID, siblingID);
+            TypeInference.addKnownType(childID, childType);
+            TypeInference.addKnownType(siblingID, siblingType);
+            TypeInference.resolve();
+            expect(typeState.resolved[childID].type).to.be(childType);
+            expect(typeState.resolved[siblingID].type).to.be(siblingType);
+          });
+
+          it('should assign first child\'s type to parent', function() {
+            var parentID = getRandomID(),
+                childID = getRandomID(),
+                siblingID = getRandomID(),
+                childType = getRandomType(),
+                siblingType = getRandomType();
+            while (siblingType === childType) {
+              siblingType = getRandomType();
+            }
+
+            createSymbol(parentID);
+            createSymbol(childID);
+            createSymbol(siblingID);
+
+            TypeInference.addTypeDependency(parentID, childID);
+            TypeInference.addTypeDependency(parentID, siblingID);
+            TypeInference.addKnownType(childID, childType);
+            TypeInference.addKnownType(siblingID, siblingType);
+            TypeInference.resolve();
+            expect(typeState.resolved[parentID].type).to.be(childType);
+          });
+        }); // Type
+
+        describe('Return Type', function() {
+          it('should resolve a childs type to it\'s siblings type when the type cannot be resolved', function() {
+            var parentID = getRandomID(),
+                childID = getRandomID(),
+                siblingID = getRandomID(),
+                siblingType = getRandomType();
+
+            createSymbol(parentID);
+            createSymbol(childID);
+            createSymbol(siblingID);
+
+            TypeInference.addReturnTypeDependency(parentID, childID);
+            TypeInference.addReturnTypeDependency(parentID, siblingID);
+            TypeInference.addKnownType(siblingID, siblingType);
+            TypeInference.resolve();
+            expect(typeState.resolved).to.have.key(childID);
+            expect(typeState.resolved[childID].type).to.be(siblingType);
+          });
+
+          it('should not overwrite a childs type if it\'s siblings type is known', function() {
+            var parentID = getRandomID(),
+                childID = getRandomID(),
+                siblingID = getRandomID(),
+                childType = getRandomType(),
+                siblingType = getRandomType();
+            while (siblingType === childType) {
+              siblingType = getRandomType();
+            }
+
+            createSymbol(parentID);
+            createSymbol(childID);
+            createSymbol(siblingID);
+
+            TypeInference.addReturnTypeDependency(parentID, childID);
+            TypeInference.addReturnTypeDependency(parentID, siblingID);
+            TypeInference.addKnownType(childID, childType);
+            TypeInference.addKnownType(siblingID, siblingType);
+            TypeInference.resolve();
+            expect(typeState.resolved[childID].type).to.be(childType);
+            expect(typeState.resolved[siblingID].type).to.be(siblingType);
+          });
+
+          it('should assign first child\'s type to parent', function() {
+            var parentID = getRandomID(),
+                childID = getRandomID(),
+                siblingID = getRandomID(),
+                childType = getRandomType(),
+                siblingType = getRandomType();
+            while (siblingType === childType) {
+              siblingType = getRandomType();
+            }
+
+            createSymbol(parentID);
+            createSymbol(childID);
+            createSymbol(siblingID);
+
+            TypeInference.addReturnTypeDependency(parentID, childID);
+            TypeInference.addReturnTypeDependency(parentID, siblingID);
+            TypeInference.addKnownType(childID, childType);
+            TypeInference.addKnownType(siblingID, siblingType);
+            TypeInference.resolve();
+            expect(typeState.resolved[parentID].returnType).to.be(childType);
+          });
+        }); // Return Type
+      }); // Sibling Known
+    }); // Basic Resolution
+  }); // resolve
 });
