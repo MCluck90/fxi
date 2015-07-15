@@ -154,12 +154,17 @@ TypeInference = {
       resolvedNode.isScalar = false;
 
       // Generate parameters from the parameter types
+      var symbolParameters = SymbolTable.getSymbol(nodeID).data.params || [];
       for (var i = 0, len = parsedType.parameters.length; i < len; i++) {
         var paramType = parsedType.parameters[i],
-            unresolvedParam = unresolvedNode && unresolvedNode.params && unresolvedNode.params[i];
+            unresolvedParam = unresolvedNode && unresolvedNode.params && unresolvedNode.params[i],
+            knownParameter = symbolParameters[i];
         if (unresolvedParam) {
           TypeInference.addKnownType(unresolvedParam, paramType);
           resolvedNode.params.push(unresolvedParam);
+        } else if (knownParameter) {
+          TypeInference.addKnownType(knownParameter.ID, paramType);
+          resolvedNode.params.push(knownParameter.ID);
         } else {
           var paramID = SymbolTable().genSymID(SymbolTypes.Param),
               parameter = SymbolTable().addSymbol(new Symbol({
@@ -295,6 +300,10 @@ TypeInference = {
         params: [],
         returnType: null
       };
+
+      if (unresolvedNode && unresolvedNode.params) {
+        resolvedNode.params = unresolvedNode.params;
+      }
     }
 
     resolvedNode.isFunction = true;
@@ -443,6 +452,21 @@ TypeInference = {
     if (!this.enabled) {
       return;
     }
+
+    if (resolved[parentID]) {
+      throw new Error('Attempt to add parameter to known function');
+    }
+
+    var unresolvedNode = unresolved[parentID];
+    if (!unresolvedNode) {
+      unresolvedNode = unresolved[parentID] = {
+        type: null,
+        params: [],
+        returnType: null
+      };
+    }
+    unresolvedNode.params = unresolvedNode.params || [];
+    unresolvedNode.params.push(paramID);
   },
 
   /**
@@ -488,6 +512,37 @@ TypeInference = {
       });
 
       Object.keys(unresolved).forEach(this.resolve.bind(this));
+
+      // Assign known types to symbols
+      Object.keys(resolved).forEach(function(symID) {
+        var resolvedNode = resolved[symID],
+            symbol = SymbolTable.getSymbol(symID);
+        symbol.data.type = resolvedNode.type || null;
+        symbol.data.returnType = resolvedNode.returnType || null;
+        if (resolvedNode.params) {
+          var possibleType = '(';
+          symbol.data.params = resolvedNode.params.map(function(paramID) {
+            if (!resolved[paramID]) {
+              possibleType = null;
+            } else if (possibleType) {
+              if (possibleType.length > 1) {
+                possibleType += ',';
+              }
+              possibleType += resolved[paramID].type;
+            }
+            return SymbolTable.getSymbol(paramID);
+          });
+
+          if (possibleType && !resolvedNode.type && resolvedNode.returnType) {
+            possibleType += ')->' + resolvedNode.returnType;
+            resolvedNode.type = symbol.data.type = possibleType;
+          }
+        } else {
+          symbol.data.params = null;
+        }
+        symbol.data.isScalar = resolvedNode.isScalar;
+        symbol.data.isFunction = resolvedNode.isFunction;
+      });
     } else if (unresolved[nodeID] && seen.indexOf(nodeID) === -1) {
       seen.push(nodeID);
       var unresolvedNode = unresolved[nodeID],
@@ -523,6 +578,28 @@ TypeInference = {
             result.returnType = resolvedChild.type;
           }
         });
+
+        if (!result.type) {
+          if (!unresolvedNode.params || !result.returnType) {
+            return;
+          }
+
+          result.type = '(';
+          for (var i = 0, len = unresolvedNode.params.length; i < len; i++) {
+            var paramID = unresolvedNode.params[i],
+                resolvedParam;
+            TypeInference.resolve(paramID);
+            resolvedParam = resolved[paramID];
+            if (!resolvedParam) {
+              return;
+            }
+            if (result.type.length > 1) {
+              result.type += ',';
+            }
+            result.type += resolvedParam.type;
+          }
+          result.type += ')->' + result.returnType;
+        }
 
         if (result.type) {
           unresolvedTypeChildren.forEach(function(childID) {

@@ -42,7 +42,9 @@ function getRandomScalar() {
 }
 
 function getRandomFunction(numOfParams) {
-  numOfParams = numOfParams || Math.floor(Math.random() * 5);
+  if (numOfParams === undefined) {
+    numOfParams = Math.floor(Math.random() * 5);
+  }
   var functionType = '(';
   for (var i = 0; i < numOfParams; i++) {
     if (functionType.length > 1) {
@@ -679,6 +681,33 @@ describe('Type Inference', function() {
     }); // Known Types
   }); // addReturnTypeDependency
 
+  describe('addExistingParameter', function() {
+    it('should add a parameter to the unresolved function node', function() {
+      var functionID = getRandomID(),
+          paramID = getRandomID(),
+          node;
+      createSymbol(functionID);
+      createSymbol(paramID);
+      TypeInference.addExistingParameter(functionID, paramID);
+      expect(typeState.unresolved).to.have.key(functionID);
+      node = typeState.unresolved[functionID];
+      expect(node.params).to.have.length(1);
+      expect(node.params[0]).to.be(paramID);
+    });
+
+    it('should fail if the function type is known', function() {
+      var functionID = getRandomID(),
+          paramID = getRandomID(),
+          type = getRandomFunction();
+      createSymbol(functionID);
+      createSymbol(paramID);
+      TypeInference.addKnownType(functionID, paramID);
+      expect(function() {
+        TypeInference.addExistingParameter(functionID, paramID);
+      }).to.throwError();
+    });
+  }); // addExistingParameter
+
   describe('resolve', function() {
     it('should automatically insert all known types as resolved nodes', function() {
       var allSymbols = SymbolTable().getAllSymbols(),
@@ -699,6 +728,16 @@ describe('Type Inference', function() {
         expect(typeState.resolved).to.have.key(symbol.ID);
         expect(typeState.resolved[symbol.ID].type).to.be(symbol.type);
       });
+    });
+
+    it('should complete even if a circular dependency is made', function() {
+      var parentID = getRandomID(),
+          childID = getRandomID();
+      createSymbol(parentID);
+      createSymbol(childID);
+      TypeInference.addTypeDependency(parentID, childID);
+      TypeInference.addTypeDependency(childID, parentID);
+      TypeInference.resolve();
     });
 
     describe('Basic Resolution', function() {
@@ -733,6 +772,7 @@ describe('Type Inference', function() {
                 grandparentNode,
                 childNode;
 
+            createSymbol(grandparentID);
             createSymbol(parentID);
             createSymbol(childID);
             TypeInference.addTypeDependency(grandparentID, parentID);
@@ -757,6 +797,8 @@ describe('Type Inference', function() {
                 greatGrandparentNode,
                 childNode;
 
+            createSymbol(greatGrandparentID);
+            createSymbol(grandparentID);
             createSymbol(parentID);
             createSymbol(childID);
             TypeInference.addTypeDependency(greatGrandparentID, grandparentID);
@@ -804,6 +846,7 @@ describe('Type Inference', function() {
                 grandparentNode,
                 childNode;
 
+            createSymbol(grandparentID);
             createSymbol(parentID);
             createSymbol(childID);
             TypeInference.addReturnTypeDependency(grandparentID, parentID);
@@ -828,6 +871,8 @@ describe('Type Inference', function() {
                 greatGrandparentNode,
                 childNode;
 
+            createSymbol(greatGrandparentID);
+            createSymbol(grandparentID);
             createSymbol(parentID);
             createSymbol(childID);
             TypeInference.addReturnTypeDependency(greatGrandparentID, grandparentID);
@@ -1092,5 +1137,176 @@ describe('Type Inference', function() {
         }); // Return Type
       }); // Sibling Known
     }); // Basic Resolution
+
+    describe('Symbol Table', function() {
+      it('should save a scalar type of a known symbol to the symbol table', function() {
+        var id = getRandomID(),
+            type = getRandomScalar(),
+            symbol;
+        createSymbol(id);
+        TypeInference.addKnownType(id, type);
+        TypeInference.resolve();
+        symbol = SymbolTable.getSymbol(id);
+        expect(symbol).to.be.ok();
+        expect(symbol.data.type).to.be(type);
+        expect(symbol.data.isScalar).to.be(true);
+      });
+
+      it('should save a function type of a known symbol to the symbol table', function() {
+        var id = getRandomID(),
+            type = getRandomFunction(),
+            symbol;
+        createSymbol(id);
+        TypeInference.addKnownType(id, type);
+        TypeInference.resolve();
+        symbol = SymbolTable.getSymbol(id);
+        expect(symbol).to.be.ok();
+        expect(symbol.data.type).to.be(type);
+        expect(symbol.data.isFunction).to.be(true);
+      });
+
+      it('should save the return type to a symbol when a function type is set', function() {
+        var id = getRandomID(),
+            returnType = getRandomScalar(),
+            type = '()->' + returnType,
+            symbol;
+        createSymbol(id);
+        TypeInference.addKnownType(id, type);
+        TypeInference.resolve();
+        symbol = SymbolTable.getSymbol(id);
+        expect(symbol).to.be.ok();
+        expect(symbol.data.returnType).to.be(returnType);
+      });
+
+      it('should save zero parameters when the inferred type has no parameters', function() {
+        var id = getRandomID(),
+            type = getRandomFunction(0),
+            symbol;
+        createSymbol(id);
+        TypeInference.addKnownType(id, type);
+        TypeInference.resolve();
+        symbol = SymbolTable.getSymbol(id);
+        expect(symbol).to.be.ok();
+        expect(symbol.data.params).to.be.empty();
+      });
+
+      it('should save one parameter when the inferred type takes one parameter', function() {
+        var id = getRandomID(),
+            type = getRandomFunction(1),
+            symbol;
+        createSymbol(id);
+        TypeInference.addKnownType(id, type);
+        TypeInference.resolve();
+        symbol = SymbolTable.getSymbol(id);
+        expect(symbol).to.be.ok();
+        expect(symbol.data.params).to.have.length(1);
+      });
+
+      it('should save two parameters when the inferred type takes two parameters', function() {
+        var id = getRandomID(),
+            type = getRandomFunction(2),
+            symbol;
+        createSymbol(id);
+        TypeInference.addKnownType(id, type);
+        TypeInference.resolve();
+        symbol = SymbolTable.getSymbol(id);
+        expect(symbol).to.be.ok();
+        expect(symbol.data.params).to.have.length(2);
+      });
+
+      it('should not set type if type could not be inferred', function() {
+        var parentID = getRandomID(),
+            childID = getRandomID(),
+            parentSymbol,
+            childSymbol;
+        createSymbol(parentID);
+        createSymbol(childID);
+        TypeInference.addTypeDependency(parentID, childID);
+        TypeInference.resolve();
+        parentSymbol = SymbolTable.getSymbol(parentID);
+        childSymbol = SymbolTable.getSymbol(childID);
+        expect(typeState.resolved).to.not.have.keys([parentID, childID]);
+        expect(parentSymbol.data.type).to.not.be.ok();
+        expect(childSymbol.data.type).to.not.be.ok();
+      });
+
+      it('should not set return type if type could not be inferred', function() {
+        var parentID = getRandomID(),
+            childID = getRandomID(),
+            parentSymbol,
+            childSymbol;
+        createSymbol(parentID);
+        createSymbol(childID);
+        TypeInference.addReturnTypeDependency(parentID, childID);
+        TypeInference.resolve();
+        parentSymbol = SymbolTable.getSymbol(parentID);
+        childSymbol = SymbolTable.getSymbol(childID);
+        expect(typeState.resolved).to.not.have.keys([parentID, childID]);
+        expect(parentSymbol.data.returnType).to.not.be.ok();
+        expect(childSymbol.data.returnType).to.not.be.ok();
+      });
+    }); // Symbol Table
+
+    describe('Advanced Resolution', function() {
+      it('should fail to resolve type if no known types are given', function() {
+        var parentID = getRandomID(),
+            childID = getRandomID();
+        createSymbol(parentID);
+        createSymbol(childID);
+        TypeInference.addTypeDependency(parentID, childID);
+        TypeInference.resolve();
+        expect(typeState.resolved).to.not.have.keys([parentID, childID]);
+      });
+
+      it('should fail to resolve type if children types are not known', function() {
+        var grandparentID = getRandomID(),
+            parentID = getRandomID(),
+            childID = getRandomID();
+        createSymbol(grandparentID);
+        createSymbol(parentID);
+        createSymbol(childID);
+        TypeInference.addTypeDependency(grandparentID, parentID);
+        TypeInference.addTypeDependency(parentID, childID);
+        TypeInference.resolve();
+        expect(typeState.resolved).to.not.have.keys([grandparentID, parentID, childID]);
+      });
+
+      it('should fail to resolve type if grandchildren types are not known', function() {
+        var greatGrandparentID = getRandomID(),
+            grandparentID = getRandomID(),
+            parentID = getRandomID(),
+            childID = getRandomID();
+        createSymbol(greatGrandparentID);
+        createSymbol(grandparentID);
+        createSymbol(parentID);
+        createSymbol(childID);
+        TypeInference.addTypeDependency(greatGrandparentID, grandparentID);
+        TypeInference.addTypeDependency(grandparentID, parentID);
+        TypeInference.addTypeDependency(parentID, childID);
+        TypeInference.resolve();
+        expect(typeState.resolved).to.not.have.keys([
+          greatGrandparentID,
+          grandparentID,
+          parentID,
+          childID
+        ]);
+      });
+
+      it('should determine type from one known parameter', function() {
+        var functionID = getRandomID(),
+            paramID = getRandomID(),
+            paramType = getRandomType(),
+            returnType = getRandomType(),
+            expectedType = '(' + paramType + ')->' + returnType;
+        createSymbol(functionID);
+        createSymbol(paramID);
+        TypeInference.addExistingParameter(functionID, paramID);
+        TypeInference.addKnownReturnType(functionID, returnType);
+        TypeInference.addKnownType(paramID, paramType);
+        TypeInference.resolve();
+        expect(typeState.resolved).to.have.key(functionID);
+        expect(typeState.resolved[functionID].type).to.be(expectedType);
+      });
+    }); // Advanced Resolution
   }); // resolve
 });
