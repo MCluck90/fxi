@@ -299,6 +299,9 @@ Semantics = {
         func = (fnSymbol) ? new SAR.Func(argList.args, fnSymbol) : null;
 
     // Determine if this is a function
+    if (func) {
+      TypeInference.addReturnTypeDependency(identifier.ID, func.ID);
+    }
     if (!fnSymbol) {
       throwSemanticError(identifier.identifier + ' does not exist');
     } else if (!fnSymbol.data.returnType) {
