@@ -501,6 +501,19 @@ TypeInference = {
     if (unresolvedNode.lockedParams && index > unresolvedNode.params.length) {
       return;
     }
+    var paramID;
+    if (index >= unresolvedNode.params.length) {
+      paramID = SymbolTable().genSymID(SymbolTypes.Param);
+      var parameter = SymbolTable().addSymbol(new Symbol({
+            ID: paramID,
+            value: '$' + paramID,
+            type: SymbolTypes.Param
+          }));
+      unresolvedNode.params.push(paramID);
+    } else {
+      paramID = unresolvedNode.params[index];
+    }
+    this.addTypeDependency(paramID, childID);
   },
 
   /**

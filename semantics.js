@@ -301,6 +301,11 @@ Semantics = {
     // Determine if this is a function
     if (func) {
       TypeInference.addReturnTypeDependency(identifier.ID, func.ID);
+      if (TypeInference.enabled) {
+        for (var i = 0, len = argList.args.length; i < len; i++) {
+          TypeInference.addParameterDependency(identifier.ID, i, argList.args[i].ID);
+        }
+      }
     }
     if (!fnSymbol) {
       throwSemanticError(identifier.identifier + ' does not exist');
