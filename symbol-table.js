@@ -237,7 +237,7 @@ SymbolTable.prototype = {
     }
 
     var isAnonymousFunction = (symbol.type === SymbolTypes.Lambda);
-    if (!this.enabled && symbol.type !== SymbolTypes.Temp) {
+    if (!this.enabled && !isType(symbol, [SymbolTypes.Temp, SymbolTypes.Param])) {
       if (isAnonymousFunction) {
         var lambdaID = this._lambdaIDs[this._lambdaCount];
         if (!lambdaID) {
@@ -438,7 +438,7 @@ SymbolTable.prototype = {
               if (val instanceof Symbol) {
                 val = val.ID;
               }
-              if (dataKey === 'params') {
+              if (dataKey === 'params' && val) {
                 console.log('    params:');
                 val.forEach(function(param) {
                   console.log('      ' + param.value + ':');

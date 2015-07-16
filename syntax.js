@@ -260,6 +260,7 @@ var Syntax = {
     if (this.parameter_list(true)) {
       this.parameter_list();
     }
+    Semantics.endParameters(symbol.ID);
     checkLexeme(')');
     checkLexeme('{');
     while (this.statement(true)) {

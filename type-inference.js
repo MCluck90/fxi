@@ -470,15 +470,58 @@ TypeInference = {
   },
 
   /**
-   * Generates a new parameter for a given node
-   * Applies a type dependency between the new node and the dependency
-   * @param {string} parentID
-   * @param {string} dependencyID
+   * Adds a dependency to the nth parameter of a function
+   * @param {string} funcID   Symbol ID for the function
+   * @param {number} index    Index of the parameter
+   * @param {string} childID  Symbol ID for the dependency
    */
-  addNewParameter: function(parentID, dependencyID) {
+  addParameterDependency: function(funcID, index, childID) {
     if (!this.enabled) {
       return;
     }
+
+    var resolvedNode = resolved[funcID];
+    if (resolvedNode) {
+      if (resolvedNode.params && index < resolvedNode.params.length) {
+        this.addTypeDependency(resolvedNode.params[i], childID);
+      }
+      return;
+    }
+
+    var unresolvedNode = unresolved[funcID];
+    if (!unresolvedNode) {
+      unresolvedNode = unresolved[funcID] = {
+        type: null,
+        params: null,
+        returnType: null
+      };
+    }
+
+    unresolvedNode.params = unresolvedNode.params || [];
+    if (unresolvedNode.lockedParams && index > unresolvedNode.params.length) {
+      return;
+    }
+  },
+
+  /**
+   * Ensures no more parameters will be added to a function
+   * @param {string} funcID Symbol ID of the function to lock
+   */
+  lockParameters: function(funcID) {
+    if (!this.enabled || resolved[funcID]) {
+      return;
+    }
+
+    var unresolvedNode = unresolved[funcID];
+    if (!unresolvedNode) {
+      unresolvedNode = unresolved[funcID] = {
+        type: null,
+        params: null,
+        returnType: null
+      };
+    }
+
+    unresolvedNode.lockedParams = true;
   },
 
   /**

@@ -36,7 +36,7 @@ Semantics = {
     if (symbol) {
       if (symbol.data.type === null) {
         throwSemanticError('Cannot determine type for ' + symbol.value);
-      } else if (symbol.data.returnType === null) {
+      } else if (symbol.data.isFunction && symbol.data.returnType === null) {
         throwSemanticError('Cannot determine return type for ' + symbol.value);
       }
       Stack.action.push(new SAR.Identifier(symbol));
@@ -210,8 +210,20 @@ Semantics = {
           parameterSymbol = SymbolTable.getSymbol(parameter.ID);
       fnSymbol.data.params = fnSymbol.data.params || [];
       fnSymbol.data.params.push(parameterSymbol);
-      TypeInference.addTypeDependency(fnSymbol.ID, parameter.ID);
+      TypeInference.addExistingParameter(fnSymbol.ID, parameter.ID);
     }
+  },
+
+  /**
+   * Marks the end of a parameters list
+   * @param {string} funcID
+   */
+  endParameters: function(funcID) {
+    if (!this.enabled) {
+      return;
+    }
+
+    TypeInference.lockParameters(funcID);
   },
 
   /**
@@ -254,17 +266,20 @@ Semantics = {
 
     // Infer types for the parameters
     var funcSar = Stack.action.top,
-        params = SymbolTable.getSymbol(funcSar.ID).data.params.slice().reverse(),
         args = argList.args,
-        numOfArgs = args.length;
+        numOfArgs = args.length,
+        existingParams = SymbolTable.getSymbol(funcSar.ID).data.params || [],
+        params = existingParams.slice().reverse();
+
     if (numOfArgs !== params.length) {
       throwSemanticError('Expected ' + params.length + ' arguments, got ' + numOfArgs);
     } else if (TypeInference.enabled) {
       for (var i = 0; i < numOfArgs; i++) {
-        var arg = args[i],
-            param = params[i];
-        TypeInference.addTypeDependency(param.ID, arg.ID);
+        var arg = args[i];
+        TypeInference.addParameterDependency(funcSar.ID, i, arg.ID);
       }
+    } else {
+      // Check that types match
     }
 
     Stack.action.push(argList);
