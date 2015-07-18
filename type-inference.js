@@ -227,52 +227,6 @@ TypeInference = {
         });
       }
     }
-
-    /**
-    Q. What if a type is already known?
-      A: Ignore the new type.
-
-    Q: What if it's a function type?
-      A: Parse out the type and mark as a function.
-
-      Q: Should parameters be parsed out?
-        A: Yes.
-
-      Q: Should the return type be parsed out?
-        A: Yes.
-
-      Q: What if the return type is known and the new return type conflicts?
-        A: Ignore the new type.
-
-    Q: What if type was previously unknown?
-      A: Mark it as known.
-
-      Q: i.e. what if it has type dependencies?
-        A: If the dependencies type isn't known, invert the dependency
-           so that the child now takes on the type of the parent.
-
-    Q: What if there are return type dependencies?
-      A: If the dependencies type isn't known, invert the dependency
-         so that the child now takes on the return type of the parent.
-
-      Q: ... but the new type is a scalar?
-        A: Ignore the new type.
-
-    Q: What if type was known to be a scalar but new type is a function?
-      A: Ignore the new type.
-
-    Q: After a type is known, can it be changed?
-      A: No.
-
-    Q: What if the type is a scalar?
-      A: Assign the new type.
-
-      Q: ... but it has parameters?
-        A: Ignore the new type.
-
-      Q: ... but it has return type dependencies?
-        A: Ignore the new type.
-    **/
   },
 
   /**
@@ -317,20 +271,6 @@ TypeInference = {
         TypeInference.addKnownType(childID, returnType);
       });
     }
-
-    /**
-    Q: What if return type is already known?
-      A: Ignore new type.
-
-    Q: What if type is known to be scalar?
-      A: Ignore new type.
-
-    Q: Can a return type be known without knowing parameters?
-      A: No. Return type will be inferred after function call, where parameters will be inferred.
-
-    Q: After a return type is known, can it be changed?
-      A: No.
-    **/
   },
 
   /**
@@ -372,13 +312,6 @@ TypeInference = {
     if (unresolvedNode.type.indexOf(childID) === -1) {
       unresolvedNode.type.push(childID);
     }
-    /**
-    Q: What if the type is already known?
-      A: Flip the dependency, apply the known type to the child.
-
-    Q: What if type of child is already known?
-      A: Add known type.
-    **/
   },
 
   /**
@@ -425,20 +358,6 @@ TypeInference = {
     if (unresolvedNode.returnType.indexOf(childID) === -1) {
       unresolvedNode.returnType.push(childID);
     }
-
-    /**
-    Q: What if the child type is already known?
-      A: Apply the known type.
-
-    Q: What if return type is known?
-      A: Ignore new type.
-
-    Q: What if type is known to be a scalar?
-      A: Ignore new type.
-
-    Q: What if the return type is already known?
-      A: Flip the dependency, apply the known type to the child.
-    **/
   },
 
   /**
@@ -674,46 +593,6 @@ TypeInference = {
           this.addKnownReturnType(nodeID, result.returnType);
         }
       }
-      /**
-      Q: What if the node is not in the system?
-        A: Ignore it.
-
-      Q: If a type is known, do we check it's dependencies?
-        A: Yes. Resolve dependencies with known type.
-
-        Q: Do such dependencies exist?
-          A: No. If the type is known then dependencies are already processed.
-
-      Q: What if the type dependencies disagree?
-        A: Don't worry about it.
-
-        Q: Should the first resolved type be the definitive type?
-          A: Yes.
-
-        Q: Should the most common type be the final type?
-          A: No.
-
-      Q: What if the type resolves to a function?
-        A: Then process it as a function. Give it parameters and a return type.
-
-        Q: Will dependencies always have parameters and a return type?
-          A: Yes.
-
-        Q: Can the same parameters be used?
-          A: Yes(?). Just generate new parameters. Won't hurt anything.
-
-        Q: Will new parameters have to be made?
-          A: Yes. Will happen automatically through addKnownType.
-
-        Q: What if the parameters couldn't be resolved?
-          A: If type is not known, do not mark it as known.
-
-        Q: Should resolved parameters be added as dependencies to own parameters?
-          A: No.
-
-        Q: What if return types don't resolve to the same type?
-          A: Doesn't matter. Take the first one.
-      **/
     }
   }
 };
