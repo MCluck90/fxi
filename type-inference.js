@@ -287,7 +287,7 @@ TypeInference = {
 
     var unresolvedNode = unresolved[nodeID],
         resolvedNode = resolved[nodeID];
-    if (resolvedNode && (resolvedNode.returnType || resolvedNode.isScalar)) {
+    if (resolvedNode && (resolvedNode.type || resolvedNode.returnType || resolvedNode.isScalar)) {
       // Return type is already known or it's a scalar
       // no need to set a return type
       return;
@@ -313,7 +313,6 @@ TypeInference = {
     // Apply return type to any return type dependencies
     if (unresolvedNode) {
       var returnTypeDependencies = unresolvedNode.returnType || [];
-      delete unresolved[nodeID];
       returnTypeDependencies.forEach(function(childID) {
         TypeInference.addKnownType(childID, returnType);
       });
@@ -460,6 +459,7 @@ TypeInference = {
     var unresolvedNode = unresolved[parentID];
     if (!unresolvedNode) {
       unresolvedNode = unresolved[parentID] = {
+        ID: parentID,
         type: null,
         params: [],
         returnType: null
@@ -491,6 +491,7 @@ TypeInference = {
     var unresolvedNode = unresolved[funcID];
     if (!unresolvedNode) {
       unresolvedNode = unresolved[funcID] = {
+        ID: funcID,
         type: null,
         params: null,
         returnType: null
@@ -528,6 +529,7 @@ TypeInference = {
     var unresolvedNode = unresolved[funcID];
     if (!unresolvedNode) {
       unresolvedNode = unresolved[funcID] = {
+        ID: funcID,
         type: null,
         params: null,
         returnType: null
@@ -602,12 +604,13 @@ TypeInference = {
     } else if (unresolved[nodeID] && seen.indexOf(nodeID) === -1) {
       seen.push(nodeID);
       var unresolvedNode = unresolved[nodeID],
+          resolvedNode = resolved[nodeID] || {},
           result = {
-            type: null,
+            type: resolvedNode.type || null,
             params: null,
-            returnType: null,
-            isFunction: null,
-            isScalar: null
+            returnType: resolvedNode.returnType || null,
+            isFunction: resolvedNode.isFunction || null,
+            isScalar: resolvedNode.isScalar || null
           };
 
       if (unresolvedNode) {
@@ -636,13 +639,14 @@ TypeInference = {
         });
 
         if (!result.type) {
-          if (!unresolvedNode.params || !result.returnType) {
+          var params = unresolvedNode.params || resolvedNode.params;
+          if (!params || !result.returnType) {
             return;
           }
 
           result.type = '(';
-          for (var i = 0, len = unresolvedNode.params.length; i < len; i++) {
-            var paramID = unresolvedNode.params[i],
+          for (var i = 0, len = params.length; i < len; i++) {
+            var paramID = params[i],
                 resolvedParam;
             TypeInference.resolve(paramID);
             resolvedParam = resolved[paramID];

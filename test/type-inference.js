@@ -370,7 +370,7 @@ describe('Type Inference', function() {
     });
 
     describe('Return Type Dependencies', function() {
-      it('should destroy the matching unresolved node', function() {
+      it('should not destroy the matching unresolved node', function() {
         var parentID = getRandomID(),
             childID = getRandomID(),
             type = getRandomType();
@@ -381,7 +381,7 @@ describe('Type Inference', function() {
         TypeInference.addReturnTypeDependency(parentID, childID);
         expect(typeState.unresolved).to.have.key(parentID);
         TypeInference.addKnownReturnType(parentID, type);
-        expect(typeState.unresolved).to.not.have.key(parentID);
+        expect(typeState.unresolved).to.have.key(parentID);
       });
 
       it('should set the type for 1 unknown return type dependency', function() {
