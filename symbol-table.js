@@ -136,6 +136,7 @@ SymbolTable = function(parent, symbol) {
   this._lambdaCount = 0;
   this._lambdaIDs = [];
   this.symbol = symbol;
+  this.byteSize = 4; // Account for function address in closures
 };
 
 SymbolTable.prototype = {
@@ -226,6 +227,17 @@ SymbolTable.prototype = {
   },
 
   /**
+   * Prevents adding parameters byte offsets
+   */
+  lockParameters: function() {
+    if (!this.enabled) {
+      return;
+    }
+
+    this.parametersLocked = true;
+  },
+
+  /**
    * Adds a symbol to the table
    * @param {Symbol}  symbol
    * @returns {Symbol} Returns the symbol
@@ -307,6 +319,12 @@ SymbolTable.prototype = {
 
     if (isType(symbol, [SymbolTypes.Fn, SymbolTypes.Lambda]) && !symbol.data.params) {
       symbol.data.params = [];
+    }
+
+    // Add byte offset to symbol
+    if (this._parent && (!this.parametersLocked || symbol.type !== SymbolTypes.Param)) {
+      symbol.data.offset = this.byteSize;
+      this.byteSize += 4;
     }
 
     this._symbols[symbol.value] = symbol;
