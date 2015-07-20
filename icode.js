@@ -224,7 +224,7 @@ ICode = {
    * Starts a new function scope so that functions
    * are automatically placed in their own blocks
    */
-  startFunction: function() {
+  startFunction: function(symbol) {
     if (!this.enabled) {
       return;
     }
@@ -233,6 +233,25 @@ ICode = {
       quadsStack.push(activeQuads);
     }
     activeQuads = [];
+
+    if (symbol) {
+      var comment = 'Initialize ' + symbol.value + '(';
+      symbol.data.params.forEach(function(param, index) {
+        if (index > 0) {
+          comment += ', ';
+        }
+        comment += param.data.type;
+      });
+      comment += ') -> ' + symbol.data.returnType;
+
+      // Initialize the function
+      pushQuad({
+        label: symbol.ID,
+        instruction: 'FUNC',
+        args: [symbol.ID],
+        comment: comment
+      });
+    }
   },
 
   /**

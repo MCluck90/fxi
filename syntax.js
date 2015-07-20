@@ -255,7 +255,7 @@ var Syntax = {
     symbol = SymbolTable().addSymbol(symbol);
     SymbolTable().setScope(symbol);
     Semantics.sPush(symbol);
-    ICode.startFunction();
+    ICode.startFunction(symbol);
     checkLexeme('=>');
     checkLexeme('(');
     if (this.parameter_list(true)) {
