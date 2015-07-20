@@ -394,6 +394,22 @@ ICode = {
    *********/
 
   /**
+   * Reads from standard in
+   * @param {SAR} expression
+   */
+  Read: function(expression) {
+    if (!this.enabled) {
+      return;
+    }
+
+    pushQuad({
+      comment: 'read ' + (expression.identifier || expression.ID),
+      instruction: 'READ',
+      args: [expression.type, expression.ID],
+    });
+  },
+
+  /**
    * Write to standard output
    * @param {SAR} expression
    */
@@ -405,7 +421,7 @@ ICode = {
     pushQuad({
       comment: 'write ' + (expression.identifier || expression.ID),
       instruction: 'WRITE',
-      args: [expression.type, expression.ID]
+      args: [expression.type, expression.ID],
     });
   },
 

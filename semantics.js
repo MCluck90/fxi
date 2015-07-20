@@ -405,6 +405,7 @@ Semantics = {
     if (expression.type !== 'char' && expression.type !== 'int') {
       throwSemanticError('Cannot read to type ' + expression.type + '. Must be a char or an int');
     }
+    ICode.Read(expression);
   },
 
   /*****************
