@@ -78,9 +78,8 @@ runPass('syntax')
     }
   }
 
-  targetCode = TCode.compile(ICode.quads);
-
   if (outputTCode) {
+    targetCode = TCode.compile(ICode.quads);
     if (typeof outputTCode === 'string') {
       fs.writeFileSync(path.join(process.cwd(), outputTCode), targetCode);
     } else {
