@@ -206,10 +206,6 @@ function pushQuad(opts) {
     });
   }
 
-  if (opts.comment) {
-    opts.comment = '; ' + opts.comment;
-  }
-
   activeQuads.push([
     currentLabel      || '',
     opts.instruction  || '',
@@ -251,6 +247,35 @@ ICode = {
       ICode.quads = ICode.quads.concat(activeQuads);
     }
     activeQuads = quadsStack.pop();
+  },
+
+  /**
+   * Generates the intermediate code from the run statements
+   * @return {string}
+   */
+  createCode: function() {
+    return this.quads.map(function(quad) {
+      var result = '';
+      for (var i = 0, len = quad.length; i < len; i++) {
+        var attr = quad[i];
+        if (i === 1) {
+          result += '\t';
+        }
+        if (i >= 1) {
+          result += '\t';
+        }
+        if (i === len - 1 && attr.length) {
+          result += '// ';
+        }
+
+        result += attr;
+        // Put commas between arguments
+        if (i > 1 && i < 4 && attr.length && quad[i + 1].length) {
+          result += ',';
+        }
+      }
+      return result;
+    }).join('\n');
   },
 
   /**

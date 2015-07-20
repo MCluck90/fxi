@@ -67,9 +67,7 @@ runPass('syntax')
       targetCode;
 
   if (outputICode) {
-    ICode.quads.forEach(function(quad) {
-      icode += quad.join('\t') + '\n';
-    });
+    icode = ICode.createCode();
 
     if (typeof outputICode === 'string') {
       fs.writeFileSync(path.join(process.cwd(), outputICode), icode);
