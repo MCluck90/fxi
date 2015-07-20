@@ -119,7 +119,7 @@ var Syntax = {
     checkLexeme('main');
     this.lambda();
     Semantics.EOE();
-    ICode.Exit();
+    ICode.End();
   },
 
   /**
@@ -270,6 +270,12 @@ var Syntax = {
     }
     // statement
     checkLexeme('}');
+
+    // Include an exit command at the end of main
+    if (symbol.value === 'main') {
+      ICode.Exit();
+    }
+
     ICode.endFunction();
     Semantics.sPop();
     SymbolTable().exitScope();

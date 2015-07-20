@@ -64,7 +64,7 @@ runPass('syntax')
       outputICode = argv.i || argv.icode,
       outputTCode = argv.o || argv.output,
       icode = '',
-      targetCode = TCode.compile(ICode.quads);
+      targetCode;
 
   if (outputICode) {
     ICode.quads.forEach(function(quad) {
@@ -77,6 +77,8 @@ runPass('syntax')
       console.log(icode);
     }
   }
+
+  targetCode = TCode.compile(ICode.quads);
 
   if (outputTCode) {
     if (typeof outputTCode === 'string') {

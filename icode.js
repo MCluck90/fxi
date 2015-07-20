@@ -261,9 +261,12 @@ ICode = {
       return;
     }
 
+    // Make sure it appears first
+    this.startFunction();
     pushQuad({
       instruction: 'INIT'
     });
+    this.endFunction();
   },
 
   /**
@@ -293,6 +296,21 @@ ICode = {
     pushQuad({
       instruction: 'EXIT'
     });
+  },
+
+  /**
+   * Generate any post-program code
+   */
+  End: function() {
+    if (!this.enabled) {
+      return;
+    }
+
+    this.startFunction();
+    pushQuad({
+      instruction: 'END'
+    });
+    this.endFunction();
   }
 };
 
