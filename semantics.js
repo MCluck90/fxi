@@ -365,11 +365,22 @@ Semantics = {
     this.EOE(false);
     var result = Stack.action.pop(),
         scope = Stack.scope.top;
-    TypeInference.addReturnTypeDependency(scope.ID, result.ID);
-    if (!scope.returnType) {
-      scope.returnType = result.type;
-    } else if (result.type !== scope.returnType) {
-      throwSemanticError('Expected value of type ' + scope.returnType + ', found type ' + result.type);
+    if (!result) {
+      ICode.Rtn();
+      result = { type: 'void' };
+    } else {
+      ICode.Return(result);
+    }
+
+    if (result.type) {
+      if (!scope.returnType) {
+        scope.returnType = result.type;
+        TypeInference.addKnownReturnType(scope.ID, result.type);
+      } else if (result.type !== scope.returnType) {
+        throwSemanticError('Expected value of type ' + scope.returnType + ', found type ' + result.type);
+      }
+    } else {
+      TypeInference.addReturnTypeDependency(scope.ID, result.ID);
     }
   },
 

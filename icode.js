@@ -221,54 +221,6 @@ ICode = {
   quads: [],
 
   /**
-   * Starts a new function scope so that functions
-   * are automatically placed in their own blocks
-   */
-  startFunction: function(symbol) {
-    if (!this.enabled) {
-      return;
-    }
-
-    if (activeQuads) {
-      quadsStack.push(activeQuads);
-    }
-    activeQuads = [];
-
-    if (symbol) {
-      var comment = 'Initialize ' + symbol.value + '(';
-      symbol.data.params.forEach(function(param, index) {
-        if (index > 0) {
-          comment += ', ';
-        }
-        comment += param.data.type;
-      });
-      comment += ') -> ' + symbol.data.returnType;
-
-      // Initialize the function
-      pushQuad({
-        label: symbol.ID,
-        instruction: 'FUNC',
-        args: [symbol.ID],
-        comment: comment
-      });
-    }
-  },
-
-  /**
-   * Ends a function scope and returns to the previous one
-   */
-  endFunction: function() {
-    if (!this.enabled) {
-      return;
-    }
-
-    if (activeQuads) {
-      ICode.quads = ICode.quads.concat(activeQuads);
-    }
-    activeQuads = quadsStack.pop();
-  },
-
-  /**
    * Generates the intermediate code from the run statements
    * @return {string}
    */
@@ -300,7 +252,7 @@ ICode = {
   /**
    * Provide a spot for initialization code
    */
-  Init: function() {
+  Init: function(mainFunc) {
     if (!this.enabled) {
       return;
     }
@@ -309,6 +261,19 @@ ICode = {
     this.startFunction();
     pushQuad({
       instruction: 'INIT'
+    });
+    pushQuad({
+      instruction: 'FRAME',
+      args: [mainFunc.ID, null]
+    });
+    pushQuad({
+      instruction: 'CALL',
+      args: [mainFunc.ID],
+      comment: 'Start main()->void'
+    });
+    pushQuad({
+      instruction: 'EXIT',
+      comment: 'End program'
     });
     this.endFunction();
   },
@@ -422,6 +387,87 @@ ICode = {
       comment: 'write ' + (expression.identifier || expression.ID),
       instruction: 'WRITE',
       args: [expression.type, expression.ID],
+    });
+  },
+
+  /***************
+   *  FUNCTIONS  *
+   ***************/
+
+   /**
+    * Starts a new function scope so that functions
+    * are automatically placed in their own blocks.
+    */
+   startFunction: function(symbol) {
+     if (!this.enabled) {
+       return;
+     }
+
+     if (activeQuads) {
+       quadsStack.push(activeQuads);
+     }
+     activeQuads = [];
+
+     if (symbol) {
+       var comment = 'Initialize ' + symbol.value + '(';
+       symbol.data.params.forEach(function(param, index) {
+         if (index > 0) {
+           comment += ', ';
+         }
+         comment += param.data.type;
+       });
+       comment += ') -> ' + symbol.data.returnType;
+
+       // Initialize the function
+       pushQuad({
+         label: symbol.ID,
+         instruction: 'FUNC',
+         args: [symbol.ID],
+         comment: comment
+       });
+     }
+   },
+
+   /**
+    * Ends a function scope and returns to the previous one
+    */
+   endFunction: function() {
+     if (!this.enabled) {
+       return;
+     }
+
+     if (activeQuads) {
+       ICode.quads = ICode.quads.concat(activeQuads);
+     }
+     activeQuads = quadsStack.pop();
+   },
+
+   /**
+    * Returns void
+    */
+   Rtn: function() {
+     if (!this.enabled) {
+       return;
+     }
+
+     pushQuad({
+       instruction: 'RTN'
+     });
+   },
+
+  /**
+   * Returns a value from a function
+   * @param {SAR} expression
+   */
+  Return: function(expression) {
+    if (!this.enabled) {
+      return;
+    }
+
+    pushQuad({
+      instruction: 'RETURN',
+      args: [expression.ID],
+      comment: 'return ' + expression.identifier
     });
   },
 

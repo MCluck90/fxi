@@ -110,7 +110,9 @@ var Syntax = {
    * { fn_declaration } "main" lambda
    */
   program: function() {
-    ICode.Init();
+    if (ICode.enabled) {
+      ICode.Init(SymbolTable().findSymbol('main'));
+    }
     while (this.fn_declaration(true)) {
       this.fn_declaration();
     }
@@ -276,11 +278,7 @@ var Syntax = {
     // statement
     checkLexeme('}');
 
-    // Include an exit command at the end of main
-    if (symbol.value === 'main') {
-      ICode.Exit();
-    }
-
+    ICode.Rtn();
     ICode.endFunction();
     Semantics.sPop();
     SymbolTable().exitScope();
