@@ -279,7 +279,13 @@ Semantics = {
         TypeInference.addParameterDependency(funcSar.ID, i, arg.ID);
       }
     } else {
-      // Check that types match
+      for (var i = 0; i < numOfArgs; i++) {
+        var arg = args[i],
+            param = params[i];
+        if (param.data.type !== arg.type) {
+          throwSemanticError(arg.value + ' must be of type ' + param.data.type);
+        }
+      }
     }
 
     Stack.action.push(argList);

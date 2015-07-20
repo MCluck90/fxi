@@ -161,10 +161,14 @@ TypeInference = {
             knownParameter = symbolParameters[i];
         if (unresolvedParam) {
           TypeInference.addKnownType(unresolvedParam, paramType);
-          resolvedNode.params.push(unresolvedParam);
+          if (resolvedNode.params.indexOf(unresolvedParam) === -1) {
+            resolvedNode.params.push(unresolvedParam);
+          }
         } else if (knownParameter) {
           TypeInference.addKnownType(knownParameter.ID, paramType);
-          resolvedNode.params.push(knownParameter.ID);
+          if (resolvedNode.params.indexOf(knownParameter.ID) === -1) {
+            resolvedNode.params.push(knownParameter.ID);
+          }
         } else {
           var paramID = SymbolTable().genSymID(SymbolTypes.Param),
               parameter = SymbolTable().addSymbol(new Symbol({
@@ -402,7 +406,7 @@ TypeInference = {
     var resolvedNode = resolved[funcID];
     if (resolvedNode) {
       if (resolvedNode.params && index < resolvedNode.params.length) {
-        this.addTypeDependency(resolvedNode.params[i], childID);
+        this.addTypeDependency(resolvedNode.params[index], childID);
       }
       return;
     }
@@ -429,7 +433,7 @@ TypeInference = {
             value: '$' + paramID,
             type: SymbolTypes.Param
           }));
-      unresolvedNode.params.push(paramID);
+      unresolvedNode.params.push(parameter.ID);
     } else {
       paramID = unresolvedNode.params[index];
     }
