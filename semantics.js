@@ -510,7 +510,8 @@ Semantics = {
 
     return {
       a: a,
-      b: b
+      b: b,
+      temp: temp
     };
   },
 
@@ -522,7 +523,8 @@ Semantics = {
       return;
     }
 
-    this._mathOperation();
+    var result = this._mathOperation();
+    ICode.Add(result.b, result.a, result.temp);
   },
 
   /**
@@ -533,7 +535,8 @@ Semantics = {
       return;
     }
 
-    this._mathOperation();
+    var result = this._mathOperation();
+    ICode.Subtract(result.b, result.a, result.temp);
   },
 
   /**
@@ -544,7 +547,8 @@ Semantics = {
       return;
     }
 
-    this._mathOperation();
+    var result = this._mathOperation();
+    ICode.Multiply(result.b, result.a, result.temp);
   },
 
   /**
@@ -555,7 +559,8 @@ Semantics = {
       return;
     }
 
-    this._mathOperation();
+    var result = this._mathOperation();
+    ICode.Divide(result.b, result.a, result.temp);
   },
 
   /**

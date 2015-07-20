@@ -313,6 +313,86 @@ ICode = {
     this.endFunction();
   },
 
+  /****************
+   *  ARITHMETIC  *
+   ****************/
+
+  /**
+   * Add two elements together and store them in another variable
+   * @param {SAR} x
+   * @param {SAR} y
+   * @param {SAR} z
+   */
+  Add: function(x, y, z) {
+    if (!this.enabled) {
+      return;
+    }
+
+    pushQuad({
+      instruction: 'ADD',
+      args: [z.ID, x.ID, y.ID],
+      comment: z.identifier + ' = ' + x.identifier + ' + ' + y.identifier
+    });
+  },
+
+  /**
+   * Subtracts two elements together and store them in another variable
+   * @param {SAR} x
+   * @param {SAR} y
+   * @param {SAR} z
+   */
+  Subtract: function(x, y, z) {
+    if (!this.enabled) {
+      return;
+    }
+
+    pushQuad({
+      instruction: 'SUB',
+      args: [z.ID, x.ID, y.ID],
+      comment: z.identifier + ' = ' + x.identifier + ' - ' + y.identifier
+    });
+  },
+
+  /**
+   * Multiplies two elements together and store them in another variable
+   * @param {SAR} x
+   * @param {SAR} y
+   * @param {SAR} z
+   */
+  Multiply: function(x, y, z) {
+    if (!this.enabled) {
+      return;
+    }
+
+    pushQuad({
+      instruction: 'MUL',
+      args: [z.ID, x.ID, y.ID],
+      comment: z.identifier + ' = ' + x.identifier + ' * ' + y.identifier
+    });
+  },
+
+  /**
+   * Divide two elements together and store them in another variable
+   * @param {SAR} x
+   * @param {SAR} y
+   * @param {SAR} z
+   */
+  Divide: function(x, y, z) {
+    if (!this.enabled) {
+      return;
+    }
+
+    pushQuad({
+      instruction: 'DIV',
+      args: [z.ID, x.ID, y.ID],
+      comment: z.identifier + ' = ' + x.identifier + ' / ' + y.identifier
+    });
+  },
+
+  /*********
+   *  I/O  *
+   *********/
+
   /**
    * Write to standard output
    * @param {SAR} expression
