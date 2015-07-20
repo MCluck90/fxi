@@ -70,8 +70,8 @@ program ::= { fn_declaration } "main" lambda
 ## Declarations
 
 ```
-variable_declaration ::= identifier [ type_declaration ] "=" expression ";"
-  | fn_declaration
+variable_declaration ::= identifier type_declaration [ "=" expression ] ";"
+  | identifier [ type_declaration ] "=" expression ";"
   ;
 
 fn_declaration ::= identifier lambda

@@ -193,6 +193,11 @@ var Syntax = {
       checkTokenType(TokenTypes.IDENTIFIER);
       if (this.type_declaration(true)) {
         this.type_declaration(false);
+        if (tokens.currentToken.lexeme === ';') {
+          checkLexeme(';');
+          Semantics.EOE();
+          return;
+        }
       }
       checkLexeme('=');
       Semantics.oPush('=');

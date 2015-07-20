@@ -70,8 +70,8 @@ program ::= { fn_declaration } "main" lambda
 ## Declarations
 
 ```
-variable_declaration ::= identifier #iPush [ type_declaration ] "=" #oPush expression ";" #EOE
-  | fn_declaration
+variable_declaration ::= identifier #iPush type_declaration [ "=" #oPush expression ] ";" #EOE
+  | identifier #iPush [ type_declaration ] "=" #oPush expression ";" #EOE
   ;
 
 fn_declaration ::= identifier lambda
