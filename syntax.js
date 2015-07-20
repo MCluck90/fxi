@@ -93,7 +93,7 @@ var Syntax = {
         Semantics.enabled = true;
         TypeInference.enabled = false;
         ICode.enabled = true;
-        ICode._quads = [];
+        ICode.quads = [];
         break;
 
       default:
@@ -255,6 +255,7 @@ var Syntax = {
     symbol = SymbolTable().addSymbol(symbol);
     SymbolTable().setScope(symbol);
     Semantics.sPush(symbol);
+    ICode.startFunction();
     checkLexeme('=>');
     checkLexeme('(');
     if (this.parameter_list(true)) {
@@ -269,8 +270,9 @@ var Syntax = {
     }
     // statement
     checkLexeme('}');
-    SymbolTable().exitScope();
+    ICode.endFunction();
     Semantics.sPop();
+    SymbolTable().exitScope();
   },
 
   /**

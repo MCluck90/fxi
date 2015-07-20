@@ -68,7 +68,7 @@ runPass('syntax')
 
   if (outputICode) {
     ICode.quads.forEach(function(quad) {
-      icode += quad.join('\t');
+      icode += quad.join('\t') + '\n';
     });
 
     if (typeof outputICode === 'string') {

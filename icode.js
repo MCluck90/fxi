@@ -157,6 +157,8 @@ var Labels = {
       return this._nextLabel.length > 0;
     }
   },
+  quadsStack = [],
+  activeQuads = [],
   ICode;
 
 /**
@@ -165,8 +167,8 @@ var Labels = {
  * @param {string} newLabel Label which will replace oldLabel
  */
 function backPatch(oldLabel, newLabel) {
-  for (var i = 0, len = ICode.quads.length; i < len; i++) {
-    ICode.quads[i] = ICode.quads[i].map(function(attr) {
+  for (var i = 0, len = activeQuads.length; i < len; i++) {
+    activeQuads[i] = activeQuads[i].map(function(attr) {
       if (attr.indexOf(oldLabel) >= 0) {
         attr = attr.replace(oldLabel, newLabel);
       }
@@ -204,7 +206,11 @@ function pushQuad(opts) {
     });
   }
 
-  ICode.quads.push([
+  if (opts.comment) {
+    opts.comment = '; ' + opts.comment;
+  }
+
+  activeQuads.push([
     currentLabel      || '',
     opts.instruction  || '',
     opts.args[0]      || '',
@@ -217,6 +223,35 @@ function pushQuad(opts) {
 ICode = {
   enabled: false,
   quads: [],
+
+  /**
+   * Starts a new function scope so that functions
+   * are automatically placed in their own blocks
+   */
+  startFunction: function() {
+    if (!this.enabled) {
+      return;
+    }
+
+    if (activeQuads) {
+      quadsStack.push(activeQuads);
+    }
+    activeQuads = [];
+  },
+
+  /**
+   * Ends a function scope and returns to the previous one
+   */
+  endFunction: function() {
+    if (!this.enabled) {
+      return;
+    }
+
+    if (activeQuads) {
+      ICode.quads = ICode.quads.concat(activeQuads);
+    }
+    activeQuads = quadsStack.pop();
+  },
 
   /**
    * Provide a spot for initialization code
