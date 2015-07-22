@@ -471,6 +471,27 @@ ICode = {
     });
   },
 
+  /*********************
+   *  DATA OPERATIONS  *
+   *********************/
+
+  /**
+   * Generate an assignment statement i.e. `x = y`
+   * @param {SAR} x
+   * @param {SAR} y
+   */
+  Assignment: function(x, y) {
+    if (!this.enabled) {
+      return;
+    }
+
+    pushQuad({
+      instruction: 'MOV',
+      args: [x.ID, y.ID],
+      comment: x.identifier + ' = ' + (y.identifier || y.ID)
+    });
+  },
+
   /**
    * Exits the program
    */

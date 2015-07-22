@@ -590,6 +590,8 @@ Semantics = {
     if (lhs.type !== rhs.type) {
       throwSemanticError(lhs.value + ' is of type ' + lhs.type + ', cannot assign a ' + rhs.type);
     }
+
+    ICode.Assignment(lhs, rhs);
   },
 
   /**********************
