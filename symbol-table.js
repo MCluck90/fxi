@@ -136,7 +136,8 @@ SymbolTable = function(parent, symbol) {
   this._lambdaCount = 0;
   this._lambdaIDs = [];
   this.symbol = symbol;
-  this.byteSize = 4; // Account for function address in closures
+  this.byteSize = 0;
+  this.closureSize = 4; // Account for function address
 };
 
 SymbolTable.prototype = {
@@ -280,7 +281,7 @@ SymbolTable.prototype = {
     }
 
     var exists = currentScope.findSymbol(symbol.value);
-    if (exists) {
+    if (exists && exists.scope === this) {
       // Don't mark as a duplicate if searching for a free variable
       if (exists.type === SymbolTypes.Fn && symbol.type !== SymbolTypes.FreeVar) {
         exists.isDuplicate = true;
@@ -306,6 +307,8 @@ SymbolTable.prototype = {
         if (freeVar.data.type) {
           symbol.data.type = freeVar.data.type;
         }
+        symbol.data.offset = this.closureSize;
+        this.closureSize += 4;
       }
     }
 
@@ -322,7 +325,7 @@ SymbolTable.prototype = {
     }
 
     // Add byte offset to symbol
-    if (this._parent && (!this.parametersLocked || symbol.type !== SymbolTypes.Param)) {
+    if (!symbol.data.isFreeVar && this._parent && (!this.parametersLocked || symbol.type !== SymbolTypes.Param)) {
       symbol.data.offset = this.byteSize;
       this.byteSize += 4;
     }
