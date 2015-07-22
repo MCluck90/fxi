@@ -300,7 +300,7 @@ SymbolTable.prototype = {
     } else if (symbol.type !== SymbolTypes.Param) {
       // It's a free variable, mark it as such
       freeVar = this.findSymbol(symbol.value);
-      if (freeVar && freeVar.scope !== currentScope) {
+      if (freeVar && freeVar.scope !== this) {
         freeVar.data.isFreeVar = true;
         symbol.type = SymbolTypes.FreeVar;
         symbol.data.original = freeVar;
@@ -325,7 +325,7 @@ SymbolTable.prototype = {
     }
 
     // Add byte offset to symbol
-    if (!symbol.data.isFreeVar && this._parent && (!this.parametersLocked || symbol.type !== SymbolTypes.Param)) {
+    if (symbol.type !== SymbolTypes.FreeVar && this._parent && (!this.parametersLocked || symbol.type !== SymbolTypes.Param)) {
       symbol.data.offset = this.byteSize;
       this.byteSize += 4;
     }
