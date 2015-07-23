@@ -395,82 +395,82 @@ ICode = {
    *  FUNCTIONS  *
    ***************/
 
-   /**
-    * Starts a new function scope so that functions
-    * are automatically placed in their own blocks.
-    */
-   startFunction: function(symbol) {
-     if (!this.enabled) {
-       return;
-     }
+  /**
+   * Starts a new function scope so that functions
+   * are automatically placed in their own blocks.
+   */
+  startFunction: function(symbol) {
+    if (!this.enabled) {
+      return;
+    }
 
-     if (activeQuads) {
-       quadsStack.push(activeQuads);
-     }
-     activeQuads = [];
+    if (activeQuads) {
+      quadsStack.push(activeQuads);
+    }
+    activeQuads = [];
 
-     if (symbol) {
-       var comment = 'Initialize ' + symbol.value + '(';
-       symbol.data.params.forEach(function(param, index) {
-         if (index > 0) {
-           comment += ', ';
-         }
-         comment += param.data.type;
-       });
-       comment += ') -> ' + symbol.data.returnType;
+    if (symbol) {
+      var comment = 'Initialize ' + symbol.value + '(';
+      symbol.data.params.forEach(function(param, index) {
+        if (index > 0) {
+          comment += ', ';
+        }
+        comment += param.data.type;
+      });
+      comment += ') -> ' + symbol.data.returnType;
 
-       // Initialize the function
-       pushQuad({
-         label: symbol.ID,
-         instruction: 'FUNC',
-         args: [symbol.ID],
-         comment: comment
-       });
-     }
-   },
+      // Initialize the function
+      pushQuad({
+        label: symbol.ID,
+        instruction: 'FUNC',
+        args: [symbol.ID],
+        comment: comment
+      });
+    }
+  },
 
-   /**
-    * Ends a function scope and returns to the previous one
-    */
-   endFunction: function() {
-     if (!this.enabled) {
-       return;
-     }
+  /**
+   * Ends a function scope and returns to the previous one
+   */
+  endFunction: function() {
+    if (!this.enabled) {
+      return;
+    }
 
-     if (activeQuads) {
-       ICode.quads = ICode.quads.concat(activeQuads);
-     }
-     activeQuads = quadsStack.pop();
-   },
+    if (activeQuads) {
+      ICode.quads = ICode.quads.concat(activeQuads);
+    }
+    activeQuads = quadsStack.pop();
+  },
 
-   /**
-    * Generates a closure object
-    * @param {string} symID
-    */
-   Closure: function(symID) {
-     if (!this.enabled) {
-       return;
-     }
+  /**
+   * Generates a closure object
+   * @param {string} symID
+   */
+  Closure: function(symID) {
+    if (!this.enabled) {
+      return;
+    }
 
-     var symbol = SymbolTable.getSymbol(symID);
-     pushQuad({
-       instruction: 'CLOSURE',
-       args: [symID, symbol.innerScope.closureSize]
-     });
-   },
+    var symbol = SymbolTable.getSymbol(symID);
+    pushQuad({
+      instruction: 'CLOSURE',
+      args: [symID, symbol.innerScope.closureSize]
+    });
+  },
 
-   /**
-    * Returns void
-    */
-   Rtn: function() {
-     if (!this.enabled) {
-       return;
-     }
+  /**
+   * Returns void
+   */
+  Rtn: function() {
+    if (!this.enabled) {
+      return;
+    }
 
-     pushQuad({
-       instruction: 'RTN'
-     });
-   },
+    pushQuad({
+      instruction: 'RTN'
+    });
+  },
 
   /**
    * Returns a value from a function
