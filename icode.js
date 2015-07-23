@@ -524,7 +524,7 @@ ICode = {
     pushQuad({
       instruction: 'BF',
       args: [expression.ID, label],
-      comment: 'if (!' + expression.value + ') branch ' + label
+      comment: 'if (!' + expression.identifier + ') branch ' + label
     });
   },
 
@@ -656,6 +656,43 @@ ICode = {
       comment: 'write ' + (expression.identifier || expression.ID),
       instruction: 'WRITE',
       args: [expression.type, expression.ID],
+    });
+  },
+
+  /*****************
+   *  CONVERSIONS  *
+   *****************/
+  /**
+   * Converts a character to an integer
+   * @param {SAR} character Character to convert
+   * @param {SAR} result    Where to store the new integer
+   */
+  atoi: function(character, result) {
+    if (!this.enabled) {
+      return;
+    }
+
+    pushQuad({
+      instruction: 'ATOI',
+      args: [result.ID, character.ID],
+      comment: (result.identifier || result.ID) + ' = atoi(' + (character.value || character.ID) + ')'
+    });
+  },
+
+  /**
+   * Converts an integer to a character
+   * @param {SAR} integer Integer to convert
+   * @param {SAR} result  Where to store the new character
+   */
+  itoa: function(integer, result) {
+    if (!this.enabled) {
+      return;
+    }
+
+    pushQuad({
+      instruction: 'ITOA',
+      args: [result.ID, integer.ID],
+      comment: (result.identifier || result.ID) + ' = itoa(' + (integer.value || integer.ID) + ')'
     });
   },
 

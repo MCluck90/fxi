@@ -451,6 +451,7 @@ Semantics = {
     }
 
     Stack.action.push(temp);
+    ICode.atoi(expression, temp);
   },
 
   /**
@@ -471,6 +472,7 @@ Semantics = {
     }
 
     Stack.action.push(temp);
+    ICode.itoa(expression, temp);
   },
 
   /***************
