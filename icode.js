@@ -485,6 +485,44 @@ ICode = {
   },
 
   /**
+   * Performs a function call
+   * @param {Symbol}  closureObj  The closure object
+   * @param {SAR[]}   args        Argument list
+   */
+  FunctionCall: function(closureObj, args) {
+    if (!this.enabled) {
+      return;
+    }
+
+    var isTopLevel = !closureObj.scope._parent;
+    pushQuad({
+      instruction: 'FRAME',
+      args: [closureObj.ID, isTopLevel]
+    });
+
+    // Push on the args
+    for (var i = 0, len = args.length; i < len; i++) {
+      var arg = args[i];
+      pushQuad({
+        instruction: 'PUSH',
+        args: [arg.ID],
+        comment: 'Push ' + arg.identifier
+      });
+    }
+
+    var argListComment = args.map(function(arg) {
+      return arg.identifier;
+    }).join(', ');
+
+    // Call the function
+    pushQuad({
+      instruction: 'CALL',
+      args: [closureObj.ID],
+      comment: closureObj.value + '(' + argListComment + ')'
+    });
+  },
+
+  /**
    * Returns void
    */
   Rtn: function() {
