@@ -507,6 +507,122 @@ ICode = {
     });
   },
 
+  /***************
+   *  BRANCHING  *
+   ***************/
+
+  /**
+   * Performs a branch
+   * @param {SAR} expression  If true, will execute block
+   */
+  If: function(expression) {
+    if (!this.enabled) {
+      return;
+    }
+
+    var label = Labels.pushIf();
+    pushQuad({
+      instruction: 'BF',
+      args: [expression.ID, label],
+      comment: 'if (!' + expression.value + ') branch ' + label
+    });
+  },
+
+  /**
+   * Closes an if statement
+   */
+  EndIf: function() {
+    if (!this.enabled) {
+      return;
+    }
+
+    if (Labels.ifExists()) {
+      Labels.pushNextLabel(Labels.popIf());
+    }
+  },
+
+  /**
+   * Opens an else clause
+   */
+  Else: function() {
+    if (!this.enabled) {
+      return;
+    }
+
+    var label = Labels.pushElse();
+    pushQuad({
+      instruction: 'JMP',
+      args: [label],
+      comment: 'Else'
+    });
+  },
+
+  /**
+   * Closes an else clause
+   */
+  EndElse: function() {
+    if (!this.enabled) {
+      return;
+    }
+
+    Labels.pushNextLabel(Labels.popElse());
+  },
+
+  /**
+   * Starts a while loop
+   * @param {SAR} expression  While true, execute block
+   */
+  While: function(expression) {
+    if (!this.enabled) {
+      return;
+    }
+
+    var label = Labels.pushWhile(),
+        endLabel = Labels.pushEndWhile(),
+        numOfQuads = activeQuads.length,
+        latestQuad = activeQuads[numOfQuads - 1],
+        previousLabel = (latestQuad) ? latestQuad[0] : '';
+
+    // Attach label to previous quad if expression was not a single bool
+    if (expression.identifier[0] === '$') {
+      // Attach label to previous comparison and backpatch as needed
+      if (previousLabel) {
+        backPatch(previousLabel, label);
+      }
+      latestQuad[0] = label;
+      pushQuad({
+        instruction: 'BF',
+        args: [expression.ID, endLabel],
+        comment: 'Exit while at ' + endLabel
+      });
+    } else {
+      // Attach the label to the current instruction
+      Labels.pushNextLabel(label);
+      pushQuad({
+        instruction: 'BF',
+        args: [expression.ID, endLabel],
+        comment: 'Exit while at ' + endLabel
+      });
+    }
+  },
+
+  /**
+   * Closes a while loop
+   */
+  EndWhile: function() {
+    if (!this.enabled) {
+      return;
+    }
+
+    var endWhileLabel = Labels.popEndWhile(),
+        whileLabel = Labels.popWhile();
+    pushQuad({
+      instruction: 'JMP',
+      args: [whileLabel]
+    });
+    Labels.pushNextLabel(endWhileLabel);
+  },
+
   /*********
    *  I/O  *
    *********/

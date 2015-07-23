@@ -340,6 +340,8 @@ Semantics = {
     if (expression.type !== 'bool') {
       throwSemanticError('Expression must be of type bool');
     }
+
+    ICode.If(expression);
   },
 
   /**
@@ -350,7 +352,14 @@ Semantics = {
       return;
     }
 
-    this.if();
+    this.EOE(false);
+    var expression = Stack.action.pop();
+    TypeInference.addKnownType(expression.ID, 'bool');
+    if (expression.type !== 'bool') {
+      throwSemanticError('Expression must be of type bool');
+    }
+
+    ICode.While(expression);
   },
 
   /**

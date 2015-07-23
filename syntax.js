@@ -364,8 +364,12 @@ var Syntax = {
       Semantics.if();
       this.statement();
       if (tokens.currentToken.lexeme === 'else') {
+        ICode.Else();
+        ICode.EndIf();
         checkLexeme('else');
         this.statement();
+      } else {
+        ICode.EndIf();
       }
     } else if (lexeme === 'while') {
       checkLexeme('while');
@@ -374,6 +378,7 @@ var Syntax = {
       checkLexeme(')');
       Semantics.while();
       this.statement();
+      ICode.EndWhile();
     } else if (lexeme === 'rtn') {
       checkLexeme('rtn');
       if (this.lambda(true)) {
