@@ -452,10 +452,35 @@ ICode = {
       return;
     }
 
-    var symbol = SymbolTable.getSymbol(symID);
+    var symbol = SymbolTable.getSymbol(symID),
+        scope = symbol.innerScope,
+        freeVars = scope.getFreeVars();
+
+    // Don't generate closures for top-level functions
+    if (!scope._parent._parent) {
+      return;
+    }
+
     pushQuad({
       instruction: 'CLOSURE',
-      args: [symID, symbol.innerScope.closureSize]
+      args: [symID, scope.closureSize]
+    });
+
+    // Sort by offset so that copying can be more easily optimized
+    freeVars.sort(function(a, b) {
+      if (a.data.offset < b.data.offset) {
+        return -1;
+      } else if (b.data.offset > a.data.offset) {
+        return 1;
+      } else {
+        return 0;
+      }
+    }).forEach(function(freeVar) {
+      pushQuad({
+        comment: 'Copy ' + freeVar.value + ' to ' + symbol.value + symbol.data.type + ' closure',
+        instruction: 'FREEVAR',
+        args: [symID, freeVar.data.original.ID, freeVar.ID]
+      });
     });
   },
 

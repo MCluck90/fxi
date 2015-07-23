@@ -383,6 +383,20 @@ SymbolTable.prototype = {
   },
 
   /**
+   * Finds all of the free variables in a scope
+   * @returns {Symbol[]}
+   */
+  getFreeVars: function() {
+    var self = this;
+    return Object.keys(this._symbols).map(function(id) {
+      return self._symbols[id];
+    })
+    .filter(function(symbol) {
+      return symbol.type === SymbolTypes.FreeVar;
+    });
+  },
+
+  /**
    * Generates a unique symbol ID
    * @param {Symbol|string} symbol  A symbol or a symbol type string
    * @returns {string}
