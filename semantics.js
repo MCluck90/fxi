@@ -319,7 +319,7 @@ Semantics = {
       throwSemanticError('Cannot use ' + identifier.identifier + ' as a function');
     }
     Stack.action.push(func);
-    ICode.FunctionCall(fnSymbol, argList.args);
+    ICode.FunctionCall(fnSymbol, argList.args.slice().reverse());
   },
 
   /******************
