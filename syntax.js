@@ -368,6 +368,7 @@ var Syntax = {
         ICode.EndIf();
         checkLexeme('else');
         this.statement();
+        ICode.EndElse();
       } else {
         ICode.EndIf();
       }
