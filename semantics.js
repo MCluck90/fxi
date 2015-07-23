@@ -595,14 +595,11 @@ Semantics = {
     ICode.Assignment(lhs, rhs);
   },
 
-  /**********************
-   * BOOLEAN OPERATORS  *
-   **********************/
+  /*************************
+   *  RELATIONS OPERATORS  *
+   *************************/
 
-  /**
-   * Verify both expressions are numbers
-   */
-  '<': function() {
+  _relationalOperation: function() {
     if (!this.enabled) {
       return;
     }
@@ -630,6 +627,24 @@ Semantics = {
     }
 
     Stack.action.push(temp);
+
+    return {
+      a: expressionA,
+      b: expressionB,
+      temp: temp
+    };
+  },
+
+  /**
+   * Verify both expressions are numbers
+   */
+  '<': function() {
+    if (!this.enabled) {
+      return;
+    }
+
+    var result = this._relationalOperation();
+    ICode.LessThan(result.b, result.a, result.temp);
   },
 
   /**
@@ -640,7 +655,8 @@ Semantics = {
       return;
     }
 
-    this['<']();
+    var result = this._relationalOperation();
+    ICode.GreaterThan(result.b, result.a, result.temp);
   },
 
   /**
@@ -651,7 +667,8 @@ Semantics = {
       return;
     }
 
-    this['<']();
+    var result = this._relationalOperation();
+    ICode.LessThanEqual(result.b, result.a, result.temp);
   },
 
   /**
@@ -662,13 +679,17 @@ Semantics = {
       return;
     }
 
-    this['<']();
+    var result = this._relationalOperation();
+    ICode.GreaterThanEqual(result.b, result.a, result.temp);
   },
 
+  /************************
+   *  BOOLEAN OPERATIONS  *
+   ************************/
   /**
    * Verify both expressions are booleans
    */
-  '&&': function() {
+  _booleanOperation: function() {
     if (!this.enabled) {
       return;
     }
@@ -696,6 +717,23 @@ Semantics = {
     }
 
     Stack.action.push(temp);
+    return {
+      a: expressionA,
+      b: expressionB,
+      temp: temp
+    };
+  },
+
+  /**
+   * Verify both expressions are booleans
+   */
+  '&&': function() {
+    if (!this.enabled) {
+      return;
+    }
+
+    var result = this._booleanOperation();
+    ICode.And(result.b, result.a, result.temp);
   },
 
   /**
@@ -706,13 +744,18 @@ Semantics = {
       return;
     }
 
-    this['&&']();
+    var result = this._booleanOperation();
+    ICode.Or(result.b, result.a, result.temp);
   },
+
+  /************************
+   *  EQUALITY OPERATORS  *
+   ************************/
 
   /**
    * Verify both expressions are the same type
    */
-  '==': function() {
+  _equalOperation: function() {
     if (!this.enabled) {
       return;
     }
@@ -727,6 +770,24 @@ Semantics = {
       throwSemanticError('Cannot compare a ' + expressionA.type + ' with a ' + expressionB.type);
     }
     Stack.action.push(temp);
+
+    return {
+      a: expressionA,
+      b: expressionB,
+      temp: temp
+    };
+  },
+
+  /**
+   * Verify both expressions are the same type
+   */
+  '==': function() {
+    if (!this.enabled) {
+      return;
+    }
+
+    var result = this._equalOperation();
+    ICode.Equal(result.b, result.a, result.temp);
   },
 
   /**
@@ -737,7 +798,8 @@ Semantics = {
       return;
     }
 
-    this['==']();
+    var result = this._equalOperation();
+    ICode.NotEqual(result.b, result.a, result.temp);
   }
 };
 

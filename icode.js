@@ -355,6 +355,158 @@ ICode = {
     });
   },
 
+  /**************************
+   *  RELATIONAL OPERATORS  *
+   **************************/
+
+  /**
+   * Compares if one variable is less than another
+   * @param {SAR} x
+   * @param {SAR} y
+   * @param {SAR} z
+   */
+  LessThan: function(x, y, z) {
+    if (!this.enabled) {
+      return;
+    }
+
+    pushQuad({
+      instruction: 'LT',
+      args: [z.ID, x.ID, y.ID],
+      comment: z.identifier + ' = ' + x.identifier + ' < ' + y.identifier
+    });
+  },
+
+  /**
+   * Compares if one variable is less than or equal to another
+   * @param {SAR} x
+   * @param {SAR} y
+   * @param {SAR} z
+   */
+  LessThanEqual: function(x, y, z) {
+    if (!this.enabled) {
+      return;
+    }
+
+    pushQuad({
+      instruction: 'LE',
+      args: [z.ID, x.ID, y.ID],
+      comment: z.identifier + ' = ' + x.identifier + ' <= ' + y.identifier
+    });
+  },
+
+  /**
+   * Compares if one variable is greater than another
+   * @param {SAR} x
+   * @param {SAR} y
+   * @param {SAR} z
+   */
+  GreaterThan: function(x, y, z) {
+    if (!this.enabled) {
+      return;
+    }
+
+    pushQuad({
+      instruction: 'GT',
+      args: [z.ID, x.ID, y.ID],
+      comment: z.identifier + ' = ' + x.identifier + ' > ' + y.identifier
+    });
+  },
+
+  /**
+   * Compares if one variable is greater than or equal to another
+   * @param {SAR} x
+   * @param {SAR} y
+   * @param {SAR} z
+   */
+  GreaterThanEqual: function(x, y, z) {
+    if (!this.enabled) {
+      return;
+    }
+
+    pushQuad({
+      instruction: 'GE',
+      args: [z.ID, x.ID, y.ID],
+      comment: z.identifier + ' = ' + x.identifier + ' >= ' + y.identifier
+    });
+  },
+
+  /***********************
+   *  BOOLEAN OPERATORS  *
+   ***********************/
+
+  /**
+   * Compares if both variables are true
+   * @param {SAR} x
+   * @param {SAR} y
+   * @param {SAR} z
+   */
+  And: function(x, y, z) {
+    if (!this.enabled) {
+      return;
+    }
+
+    pushQuad({
+      instruction: 'AND',
+      args: [z.ID, x.ID, y.ID],
+      comment: z.identifier + ' = ' + x.identifier + ' && ' + y.identifier
+    });
+  },
+
+  /**
+   * Compares if either variable is true
+   * @param {SAR} x
+   * @param {SAR} y
+   * @param {SAR} z
+   */
+  Or: function(x, y, z) {
+    if (!this.enabled) {
+      return;
+    }
+
+    pushQuad({
+      instruction: 'OR',
+      args: [z.ID, x.ID, y.ID],
+      comment: z.identifier + ' = ' + x.identifier + ' || ' + y.identifier
+    });
+  },
+
+  /**
+   * Compares two values and stores result in z
+   * @param {SAR} x
+   * @param {SAR} y
+   * @param {SAR} z
+   */
+  NotEqual: function(x, y, z) {
+    if (!this.enabled) {
+      return;
+    }
+
+    pushQuad({
+      instruction: 'NE',
+      args: [z.ID, x.ID, y.ID],
+      comment: z.identifier + ' = ' + x.identifier + ' != ' + y.identifier
+    });
+  },
+
+  /**
+   * Compares two values and stores result in z
+   * @param {SAR} x
+   * @param {SAR} y
+   * @param {SAR} z
+   */
+  Equal: function(x, y, z) {
+    if (!this.enabled) {
+      return;
+    }
+
+    pushQuad({
+      instruction: 'EQ',
+      args: [z.ID, x.ID, y.ID],
+      comment: z.identifier + ' = ' + x.identifier + ' == ' + y.identifier
+    });
+  },
+
   /*********
    *  I/O  *
    *********/
