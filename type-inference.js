@@ -1,10 +1,5 @@
 'use strict';
 
-/*******
-TODO: What about nodes not explicitly entered?
-Example: true, false, numbers, etc.
-*******/
-
 /**
  * Parses out the parts of a function type or returns the type
  * @param {string} typeString
@@ -499,10 +494,15 @@ TypeInference = {
         return unresolved[id];
       })
       .filter(function(node) {
-        return node.params && node.returnType === null;
+        return (node.params && node.returnType === null) ||
+                SymbolTable.getSymbol(node.ID).type === SymbolTypes.Fn;
       })
       .forEach(function(node) {
-        TypeInference.addKnownReturnType(node.ID, 'void');
+        if (!node.params) {
+          TypeInference.addKnownType(node.ID, '()->void');
+        } else {
+          TypeInference.addKnownReturnType(node.ID, 'void');
+        }
       });
 
       // Assign known types to symbols

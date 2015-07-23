@@ -482,18 +482,20 @@ var Syntax = {
     } else if (token.type === TokenTypes.IDENTIFIER) {
       // Look for a free variable
       var identifier = tokens.currentToken.lexeme,
-          symbol = SymbolTable().addSymbol(new Symbol({
-            type: SymbolTypes.FreeVar,
-            value: identifier
-          }));
-      if (symbol.type === SymbolTypes.FreeVar) {
-        TypeInference.addTypeDependency(symbol.ID, symbol.data.original.ID);
-      }
+          symbol;
       Semantics.iPush(identifier);
       Semantics.iExist();
       checkTokenType(TokenTypes.IDENTIFIER);
       if (this.fn_call(true)) {
         this.fn_call();
+      } else {
+        symbol = SymbolTable().addSymbol(new Symbol({
+          type: SymbolTypes.FreeVar,
+          value: identifier
+        }));
+        if (symbol.type === SymbolTypes.FreeVar) {
+          TypeInference.addTypeDependency(symbol.ID, symbol.data.original.ID);
+        }
       }
     } else {
       throw new Error('Invalid expression');
