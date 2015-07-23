@@ -494,6 +494,17 @@ TypeInference = {
 
       Object.keys(unresolved).forEach(this.resolve.bind(this));
 
+      // Assign void return types
+      Object.keys(unresolved).map(function(id) {
+        return unresolved[id];
+      })
+      .filter(function(node) {
+        return node.params && node.returnType === null;
+      })
+      .forEach(function(node) {
+        TypeInference.addKnownReturnType(node.ID, 'void');
+      });
+
       // Assign known types to symbols
       Object.keys(resolved).forEach(function(symID) {
         var resolvedNode = resolved[symID],
@@ -521,6 +532,7 @@ TypeInference = {
         } else {
           symbol.data.params = null;
         }
+
         symbol.data.isScalar = resolvedNode.isScalar;
         symbol.data.isFunction = resolvedNode.isFunction;
       });
