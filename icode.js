@@ -157,6 +157,7 @@ var Labels = {
       return this._nextLabel.length > 0;
     }
   },
+  SymbolTable = require('./symbol-table.js'),
   quadsStack = [],
   activeQuads = [],
   ICode;
@@ -440,6 +441,22 @@ ICode = {
        ICode.quads = ICode.quads.concat(activeQuads);
      }
      activeQuads = quadsStack.pop();
+   },
+
+   /**
+    * Generates a closure object
+    * @param {string} symID
+    */
+   Closure: function(symID) {
+     if (!this.enabled) {
+       return;
+     }
+
+     var symbol = SymbolTable.getSymbol(symID);
+     pushQuad({
+       instruction: 'CLOSURE',
+       args: [symID, symbol.innerScope.closureSize]
+     });
    },
 
    /**

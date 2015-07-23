@@ -260,6 +260,7 @@ var Syntax = {
     }
 
     symbol = SymbolTable().addSymbol(symbol);
+    ICode.Closure(symbol.ID);
     SymbolTable().setScope(symbol);
     Semantics.sPush(symbol);
     ICode.startFunction(symbol);
