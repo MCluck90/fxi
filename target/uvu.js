@@ -8,7 +8,8 @@ var SymbolTable = require('../symbol-table.js'),
     _quads = [],
     _currentQuad = {},
     _lastICodeLabel = '',
-    _lastComment = '';
+    _lastComment = '',
+    _lastFreeRegister = 2;
 
 /**
  * Turns an ICode quad into an object
@@ -233,6 +234,15 @@ var UVU = {
   },
 
   /**
+   * Loads a value into any register
+   * @param {string}  symbolID  Which symbol to load
+   * @returns {Register}
+   */
+  loadValue: function(symbolID) {
+    return this._loadValue(SymbolTable.getSymbol(symbolID), null);
+  },
+
+  /**
    * Loads a value into a specific register
    * @param {string}    symbolID  Which symbol to load
    * @param {Register}  register  Which register to load it into
@@ -240,6 +250,90 @@ var UVU = {
    */
   loadValueToRegister: function(symbolID, register) {
     return this._loadValue(SymbolTable.getSymbol(symbolID), register);
+  },
+
+  /**
+   * Saves the contents of a register
+   * @param {Register}  register
+   */
+  saveRegister: function(register) {
+    var FP = R('FP');
+
+    register.getValues().forEach(function(symbolID) {
+      var symbol = SymbolTable.getSymbol(symbolID),
+          location = this.getLocation(symbol),
+          comment = 'Save ' + symbol.value;
+      if (location.type === 'memory') {
+        // Don't bother saving back literals
+        return;
+      } else if (location.type === 'stack') {
+        // Save the value back to the stack
+        pushQuad({
+          comment: comment,
+          commentForce: true,
+          instruction: 'MOV',
+          args: [RSwap, FP]
+        });
+        pushQuad({
+          commentForce: true,
+          instruction: 'ADI',
+          args: [RSwap, location.offset]
+        });
+        pushQuad({
+          commentForce: true,
+          instruction: 'STR',
+          args: [register, RSwap]
+        });
+      } else {
+        throw new Error('Memory type `' + location.type + '` not yet supported.');
+      }
+    }, this);
+
+    register.clear();
+  },
+
+  /**
+   * Returns the next free register
+   * Saves the contents of a register if it must
+   * @returns {Register}
+   */
+  getFreeRegister: function() {
+    var startIndex = _lastFreeRegister,
+        register = R(startIndex);
+    if (register.isEmpty()) {
+      _lastFreeRegister++;
+      if (_lastFreeRegister > 5) {
+        _lastFreeRegister = 2;
+      }
+      return register;
+    }
+
+    // Check all other possible free registers
+    _lastFreeRegister++;
+    while (_lastFreeRegister !== startIndex) {
+      register = R(_lastFreeRegister);
+      if (register.isEmpty()) {
+        _lastFreeRegister++;
+        if (_lastFreeRegister > 5) {
+          _lastFreeRegister = 2;
+        }
+        return register;
+      } else {
+        _lastFreeRegister++;
+        if (_lastFreeRegister > 5) {
+          _lastFreeRegister = 2;
+        }
+      }
+    }
+
+    // No free register found, clear one out
+    register = R(startIndex);
+    this.saveRegister(register);
+    _lastFreeRegister = startIndex + 1;
+    if (_lastFreeRegister > 5) {
+      _lastFreeRegister = 2;
+    }
+    return register;
   },
 
   /**
@@ -505,6 +599,35 @@ var UVU = {
       instruction: 'JMR',
       args: [RSwap]
     });
+  },
+
+  /***********************
+   *  DATA MANIPULATION  *
+   ***********************/
+  /**
+   * Saves a value from one variable into another
+   * @param {QuadObj} quad
+   * @param {string}  quad.arg1 Left hand side
+   * @param {string}  quad.arg2 Right hand side
+   */
+  MOV: function(quad) {
+    var leftID      = quad.arg1,
+        rightID     = quad.arg2,
+        left        = R.withValue(leftID) || this.getFreeRegister(),
+        right       = this.loadValue(rightID),
+        leftSymbol  = SymbolTable.getSymbol(leftID),
+        rightSymbol = SymbolTable.getSymbol(rightID);
+
+    pushQuad({
+      comment: leftSymbol.value + ' = ' + rightSymbol.value,
+      instruction: 'MOV',
+      args: [left, right]
+    });
+
+    left.clear();
+    right.clear();
+    left.addValue(leftID);
+    this.saveRegister(left);
   },
 
   /*********
