@@ -265,7 +265,7 @@ ICode = {
     });
     pushQuad({
       instruction: 'FRAME',
-      args: [mainFunc.ID, null]
+      args: [mainFunc.ID, true]
     });
     pushQuad({
       instruction: 'CALL',
