@@ -147,7 +147,7 @@ SymbolTable = function(parent, symbol) {
   this._lambdaCount = 0;
   this._lambdaIDs = [];
   this.symbol = symbol;
-  this.byteSize = 0;
+  this.byteSize = -12; // Allow space for PFP, context, and return address
   this.closureSize = 4; // Account for function address
 };
 
