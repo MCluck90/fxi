@@ -1,6 +1,7 @@
 'use strict';
 
 var SymbolTable = require('../symbol-table.js'),
+    SymbolTypes = SymbolTable.SymbolTypes,
     R = require('../register.js'),
     RSwap = R(6),
     RIO = R(7),
@@ -103,6 +104,123 @@ var UVU = {
       }
       return result;
     }).join('\n');
+  },
+
+  /*************************
+   *  REGISTER MANAGEMENT  *
+   *************************/
+
+  /**
+   * Returns information about a symbol's
+   * location in memory
+   * @param {Symbol|string} string  Symbol or symbol ID
+   * @returns {object}
+   */
+  getLocation: function(symbol) {
+    if (typeof symbol === 'string') {
+      symbol = SymbolTable.getSymbol(symbol);
+    }
+
+    var load, store;
+    if (symbol.data.type === 'char') {
+      load = 'LDB';
+      store = 'STB';
+    } else {
+      load = 'LDR';
+      store = 'STR';
+    }
+
+    // Memory: Literals
+    if (SymbolTable.isLiteral(symbol)) {
+      return {
+        type: 'memory',
+        label: symbol.ID,
+        load: load,
+        store: store
+      };
+    } else if (symbol.type === SymbolTypes.FreeVar) {
+      // Heap: Free variables
+      return {
+        type: 'heap',
+        offset: symbol.data.offset,
+        load: load,
+        store: store
+      };
+    } else if (symbol.type === SymbolTypes.Fn && !symbol.scope._parent) {
+      // Global "closure"
+      return {
+        type: 'memory',
+        label: symbol.ID + '_P',
+        load: load,
+        store: store
+      };
+    } else {
+      // Stack: Everything else
+      return {
+        type: 'stack',
+        offset: symbol.data.offset,
+        load: load,
+        store: store
+      };
+    }
+  },
+
+  /**
+   * Loads in a value to a register
+   * @param {Symbol}    symbol    Which symbol to load
+   * @param {Register?} register  Which register to load the value into
+   * @returns {Register}
+   */
+  _loadValue: function(symbol, register) {
+    var symbolID = symbol.ID;
+
+    // Find out if the symbol has already been loaded
+    if (register) {
+      if (register.hasValue(symbolID)) {
+        return register;
+      }
+    } else {
+      // No register was specified
+      register = R.withValue(symbolID);
+      if (register) {
+        return register;
+      }
+
+      // Load up a free register
+      // TODO: Save contents of register first if needed
+      register = R.getFreeRegister();
+    }
+
+    // Figure out how to load up the variable
+    var location = this.getLocation(symbol),
+        comment = 'Load ' + symbol.value + ' in to ' + register;
+    if (location.type === 'memory') {
+      // Load the value directly from memory
+      pushQuad({
+        comment: comment,
+        commentForce: true,
+        instruction: location.load,
+        args: [register, location.label]
+      });
+    } else {
+      throw new Error('Memory type `' + location.type + '` not yet supported.');
+    }
+
+    // Mark this register as having this value
+    register.clear(); // Only MOV will stack what's inside of a register
+    register.addValue(symbolID);
+
+    return register;
+  },
+
+  /**
+   * Loads a value into a specific register
+   * @param {string}    symbolID  Which symbol to load
+   * @param {Register}  register  Which register to load it into
+   * @returns {Register}
+   */
+  loadValueToRegister: function(symbolID, register) {
+    return this._loadValue(SymbolTable.getSymbol(symbolID), register);
   },
 
   /**
@@ -390,15 +508,12 @@ var UVU = {
       trapCode = 1;
     }
 
-    pushQuad({
-      instruction: instruction,
-      args: [RIO, argID]
-    });
-
+    this.loadValueToRegister(argID, RIO);
     pushQuad({
       instruction: 'TRP',
       args: [trapCode]
     });
+    RIO.clear();
   },
 
   EXIT: function() {
