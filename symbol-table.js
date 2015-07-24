@@ -107,6 +107,17 @@ function getLiterals() {
     .filter(isLiteral);
 }
 
+function getGlobalFunctions() {
+  var globalScope = currentScope.getGlobal();
+  return Object.keys(globalScope._symbols)
+    .map(function(name) {
+      return globalScope._symbols[name];
+    })
+    .filter(function(symbol) {
+      return symbol.type === SymbolTypes.Fn;
+    });
+}
+
 /**
  * Sorts keys based on length
  * @param {string}  a
@@ -507,5 +518,6 @@ module.exports.getSymbol = getSymbol;
 module.exports.isLiteral = isLiteral;
 module.exports.isType = isType;
 module.exports.getLiterals = getLiterals;
+module.exports.getGlobalFunctions = getGlobalFunctions;
 
 createBuiltIns();

@@ -639,7 +639,7 @@ ICode = {
     pushQuad({
       comment: 'read ' + (expression.identifier || expression.ID),
       instruction: 'READ',
-      args: [expression.type, expression.ID],
+      args: [expression.type, expression.ID]
     });
   },
 
@@ -655,7 +655,7 @@ ICode = {
     pushQuad({
       comment: 'write ' + (expression.identifier || expression.ID),
       instruction: 'WRITE',
-      args: [expression.type, expression.ID],
+      args: [expression.type, expression.ID]
     });
   },
 
