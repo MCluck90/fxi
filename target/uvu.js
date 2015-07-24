@@ -630,6 +630,126 @@ var UVU = {
     this.saveRegister(left);
   },
 
+  /****************
+   *  ARITHMETIC  *
+   ****************/
+
+  /**
+   * Adds together two variables and stores the result in a third
+   * @param {QuadObj} quad
+   * @param {string}  quad.arg1 Result ID
+   * @param {string}  quad.arg2 Left operand ID
+   * @param {string}  quad.arg3 Right operand ID
+   */
+  ADD: function(quad) {
+    var resultID = quad.arg1,
+        leftOpID = quad.arg2,
+        rightOpID = quad.arg3,
+        leftOp = this.loadValue(leftOpID),
+        rightOp = this.loadValue(rightOpID),
+        result = this.getFreeRegister();
+
+    pushQuad({
+      instruction: 'MOV',
+      args: [result, leftOp]
+    });
+    pushQuad({
+      instruction: 'ADD',
+      args: [result, rightOp]
+    });
+
+    result.addValue(resultID);
+    leftOp.clear();
+    rightOp.clear();
+  },
+
+  /**
+   * Subtract two variables and store their result in a third
+   * @param {QuadObj} quad
+   * @param {string}  quad.arg1 Result ID
+   * @param {string}  quad.arg2 Left operand ID
+   * @param {string}  quad.arg3 Right operand ID
+   */
+  SUB: function(quad) {
+    var resultID = quad.arg1,
+        leftOpID = quad.arg2,
+        rightOpID = quad.arg3,
+        leftOp = this.loadValue(leftOpID),
+        rightOp = this.loadValue(rightOpID),
+        result = this.getFreeRegister();
+
+    pushQuad({
+      instruction: 'MOV',
+      args: [result, leftOp]
+    });
+    pushQuad({
+      instruction: 'SUB',
+      args: [result, rightOp]
+    });
+
+    result.addValue(resultID);
+    leftOp.clear();
+    rightOp.clear();
+  },
+
+  /**
+   * Multiply two variables and store their result in a third
+   * @param {QuadObj} quad
+   * @param {string}  quad.arg1 Result ID
+   * @param {string}  quad.arg2 Left operand ID
+   * @param {string}  quad.arg3 Right operand ID
+   */
+  MUL: function(quad) {
+    var resultID = quad.arg1,
+        leftOpID = quad.arg2,
+        rightOpID = quad.arg3,
+        leftOp = this.loadValue(leftOpID),
+        rightOp = this.loadValue(rightOpID),
+        result = this.getFreeRegister();
+
+    pushQuad({
+      instruction: 'MOV',
+      args: [result, leftOp]
+    });
+    pushQuad({
+      instruction: 'MUL',
+      args: [result, rightOp]
+    });
+
+    result.addValue(resultID);
+    leftOp.clear();
+    rightOp.clear();
+  },
+
+  /**
+   * Divide two variables and store their result in a third
+   * @param {QuadObj} quad
+   * @param {string}  quad.arg1 Result ID
+   * @param {string}  quad.arg2 Numerator ID
+   * @param {string}  quad.arg3 Divisor ID
+   */
+  DIV: function(quad) {
+    var resultID = quad.arg1,
+        leftOpID = quad.arg2,
+        rightOpID = quad.arg3,
+        leftOp = this.loadValue(leftOpID),
+        rightOp = this.loadValue(rightOpID),
+        result = this.getFreeRegister();
+
+    pushQuad({
+      instruction: 'MOV',
+      args: [result, leftOp]
+    });
+    pushQuad({
+      instruction: 'DIV',
+      args: [result, rightOp]
+    });
+
+    result.addValue(resultID);
+    leftOp.clear();
+    rightOp.clear();
+  },
+
   /*********
    *  I/O  *
    *********/
