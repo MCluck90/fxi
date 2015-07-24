@@ -15,6 +15,8 @@ if (!filename || argv.h || argv.help) {
   return;
 }
 
+GLOBAL.DEBUG = !!(argv.d || argv.debug);
+
 /* jshint latedef: false */
 function _then(cb) {
   if (!cb) {

@@ -12,3 +12,4 @@ Options:
                               Will print to stdout if a file
                               is not given.
   -s, --symbol                Prints out the symbol table
+  -d, --debug                 Enables debug mode
