@@ -414,10 +414,20 @@ var UVU = {
    * @param {bool}    quad.arg2 If true, function is top level and the pointer must be loaded
    */
   FRAME: function(quad) {
-    var funcID = quad.arg1,
+    var FP = R(3),
+        funcID = quad.arg1,
         isTopLevel = quad.arg2,
         funcSymbol = SymbolTable.getSymbol(funcID),
         frameSize = funcSymbol.scope.byteSize + 12; // return address, this, and previous frame pointer
+
+    // Save the frame pointer in a register
+    pushQuad({
+      instruction: 'MOV',
+      args: [FP, 'FP']
+    });
+    pushQuad({
+      comment: 'Prepare to call ' + funcSymbol.value + funcSymbol.data.type
+    });
 
     // Check for overflow
     pushQuad({
@@ -477,7 +487,7 @@ var UVU = {
     pushQuad({
       comment: 'Store the PFP',
       instruction: 'STR',
-      args: ['FP', 'SP']
+      args: [FP, 'SP']
     });
     pushQuad({
       instruction: 'ADI',
