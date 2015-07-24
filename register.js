@@ -35,7 +35,7 @@ var IndexByName = {
 var Register = function(index) {
   index = IndexByName[index] || index;
   this.index = index;
-  this.name = NameByIndex[index] | 'R' + index;
+  this.name = NameByIndex[index] || 'R' + index;
   this.values = {};
 };
 
