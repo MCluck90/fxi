@@ -1,6 +1,9 @@
 'use strict';
 
 var SymbolTable = require('../symbol-table.js'),
+    R = require('../register.js'),
+    RSwap = R(6),
+    RIO = R(7),
     _quads = [],
     _currentQuad = {},
     _lastICodeLabel = '',
@@ -189,26 +192,26 @@ var UVU = {
     pushQuad({
       comment: 'Test for overflow',
       instruction: 'MOV',
-      args: ['R6', 'SP']
+      args: [RSwap, 'SP']
     });
 
     // Determine if the stack will exceed the stack limit
     pushQuad({
       instruction: 'ADI',
-      args: ['R6', -frameSize]
+      args: [RSwap, -frameSize]
     });
     pushQuad({
       instruction: 'CMP',
-      args: ['R6', 'SL']
+      args: [RSwap, 'SL']
     });
     pushQuad({
       comment: 'Will the stack overflow?',
       instruction: 'BLT',
-      args: ['R6', 'OVERFLOW']
+      args: [RSwap, 'OVERFLOW']
     });
 
     // Load the closure context
-    var closureReg = 'R0';
+    var closureReg = R(0);
     if (isTopLevel) {
       // Grab the generated pointer
       pushQuad({
@@ -269,8 +272,7 @@ var UVU = {
    */
   CALL: function(quad) {
     // TODO: Will probably need to be fixed for non-top-level functions
-    var functionID = quad.arg1,
-        RSwap = 'R6';
+    var functionID = quad.arg1;
 
     // Load the PC
     pushQuad({
@@ -319,8 +321,6 @@ var UVU = {
    * Returns from a function
    */
   RTN: function() {
-    var RSwap = 'R6';
-
     // Deallocate the activation record
     pushQuad({
       comment: 'Begin return',
@@ -344,7 +344,7 @@ var UVU = {
     });
 
     // Set the previous frame to the current frame and return
-    var prevFP = 'R5';
+    var prevFP = R(5);
     pushQuad({
       comment: 'Load the PFP',
       instruction: 'LDR',
@@ -382,10 +382,6 @@ var UVU = {
         instruction,
         trapCode;
 
-    if (dataType !== 'char' && dataType !== 'int') {
-      throw new Error(dataType + ' not yet implemented');
-    }
-
     if (dataType === 'char') {
       instruction = 'LDB';
       trapCode = 3;
@@ -396,7 +392,7 @@ var UVU = {
 
     pushQuad({
       instruction: instruction,
-      args: ['R7', argID]
+      args: [RIO, argID]
     });
 
     pushQuad({
@@ -417,7 +413,6 @@ var UVU = {
    * Generates any required code at the end of the program
    */
   END: function() {
-    var RIO = 'R7';
     // Generate code for reporting errors
     ['Stack overflow', 'Stack underflow'].forEach(function(message) {
       var dataLabel = message.replace(' ', '_'),
