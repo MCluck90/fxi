@@ -172,7 +172,8 @@ var UVU = {
    * @returns {Register}
    */
   _loadValue: function(symbol, register) {
-    var symbolID = symbol.ID;
+    var FP = R('FP'),
+        symbolID = symbol.ID;
 
     // Find out if the symbol has already been loaded
     if (register) {
@@ -201,6 +202,24 @@ var UVU = {
         commentForce: true,
         instruction: location.load,
         args: [register, location.label]
+      });
+    } else if (location.type === 'stack') {
+      // Extract the value from the stack
+      pushQuad({
+        comment: comment,
+        commentForce: true,
+        instruction: 'MOV',
+        args: [register, FP]
+      });
+      pushQuad({
+        commentForce: true,
+        instruction: 'ADI',
+        args: [register, location.offset]
+      });
+      pushQuad({
+        commentForce: true,
+        instruction: 'LDR',
+        args: [register, register]
       });
     } else {
       throw new Error('Memory type `' + location.type + '` not yet supported.');
