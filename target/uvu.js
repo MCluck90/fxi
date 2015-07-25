@@ -683,6 +683,32 @@ var UVU = {
     });
   },
 
+  /**
+   * Returns a value from a function
+   * NOTE: Value will be stored in R2
+   * @param {QuadObj} quad
+   * @param {string}  quad.arg1 Value ID
+   */
+  RETURN: function(quad) {
+    // Make sure any changes to the heap are saved
+    this.saveAllRegisters();
+    this.loadValueToRegister(quad.arg1, R(2));
+    R(2).clear();
+    this.RTN();
+  },
+
+  /**
+   * Loads the return value from a function and saves it locally
+   * NOTE: Return value is always stored in R2
+   * @param {QuadObj} quad
+   * @param {string}  quad.arg1 Result ID
+   */
+  PEEK: function(quad) {
+    var R2 = R(2);
+    R2.addValue(quad.arg1);
+    this.saveRegister(R2);
+  },
+
   /***********************
    *  DATA MANIPULATION  *
    ***********************/

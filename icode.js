@@ -793,8 +793,9 @@ ICode = {
    * Performs a function call
    * @param {Symbol}  closureObj  The closure object
    * @param {SAR[]}   args        Argument list
+   * @param {SAR}     result      Where to save the result
    */
-  FunctionCall: function(closureObj, args) {
+  FunctionCall: function(closureObj, args, result) {
     if (!this.enabled) {
       return;
     }
@@ -824,6 +825,12 @@ ICode = {
       instruction: 'CALL',
       args: [closureObj.ID],
       comment: closureObj.value + '(' + argListComment + ')'
+    });
+
+    // Get the return value
+    pushQuad({
+      instruction: 'PEEK',
+      args: [result.ID]
     });
   },
 
