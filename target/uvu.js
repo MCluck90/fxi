@@ -446,9 +446,14 @@ var UVU = {
     var globalFunctions = SymbolTable.getGlobalFunctions();
     globalFunctions.forEach(function(symbol) {
       pushQuad({
+        comment: 'Closure for ' + symbol.value + symbol.data.type,
         label: symbol.ID + '_P',
         instruction: '.INT',
         args: [0]
+      });
+      pushQuad({
+        instruction: '.INT',
+        args: [symbol.innerScope.frameSize]
       });
     });
 
@@ -494,8 +499,21 @@ var UVU = {
    */
   CLOSURE: function(quad) {
     var symbolID = quad.arg1,
+        symbol = SymbolTable.getSymbol(symbolID),
         size = quad.arg2,
-        result = this.loadReference(symbolID);
+        result = this.loadReference(symbolID),
+        frameSize = this.getFreeRegister();
+
+    // Prepare the frame size
+    pushQuad({
+      comment: 'Prepare frame size value',
+      instruction: 'MOV',
+      args: [frameSize, RFalse]
+    });
+    pushQuad({
+      instruction: 'ADI',
+      args: [frameSize, symbol.innerScope.byteSize]
+    });
 
     // Save the current free pointer
     pushQuad({
@@ -505,6 +523,17 @@ var UVU = {
     pushQuad({
       instruction: 'STR',
       args: [RSwap, result]
+    });
+
+    // Save the frame size
+    pushQuad({
+      comment: 'Save frame size',
+      instruction: 'ADI',
+      args: [RSwap, 4]
+    });
+    pushQuad({
+      instruction: 'STR',
+      args: [RSwap, frameSize]
     });
 
     // Increment the free pointer
@@ -531,7 +560,44 @@ var UVU = {
         funcID = quad.arg1,
         isTopLevel = quad.arg2,
         funcSymbol = SymbolTable.getSymbol(funcID),
-        frameSize = funcSymbol.innerScope.byteSize + 12; // return address, this, and previous frame pointer
+        frameSize;
+
+    // Load the address of the closure object to find the frame size
+    if (isTopLevel) {
+      frameSize = this.getFreeRegister();
+      pushQuad({
+        instruction: 'LDA',
+        args: [frameSize, funcID + '_P']
+      });
+    } else {
+      frameSize = this.loadValue(funcID);
+    }
+    frameSize.clear();
+
+    // Find the frame size
+    pushQuad({
+      comment: 'Find the frame size',
+      instruction: 'ADI',
+      args: [frameSize, 4]
+    });
+    pushQuad({
+      instruction: 'LDR',
+      args: [frameSize, frameSize]
+    });
+
+    // Flip the size for comparison
+    pushQuad({
+      instruction: 'MOV',
+      args: [RSwap, RFalse]
+    });
+    pushQuad({
+      instruction: 'ADI',
+      args: [RSwap, -1]
+    });
+    pushQuad({
+      instruction: 'MUL',
+      args: [frameSize, RSwap]
+    });
 
     // Save the frame pointer in a register
     pushQuad({
@@ -551,8 +617,8 @@ var UVU = {
 
     // Determine if the stack will exceed the stack limit
     pushQuad({
-      instruction: 'ADI',
-      args: [RSwap, -frameSize]
+      instruction: 'ADD',
+      args: [RSwap, frameSize]
     });
     pushQuad({
       instruction: 'CMP',
@@ -663,7 +729,7 @@ var UVU = {
       label: funcID,
       comment: quad.comment,
       instruction: 'ADI',
-      args: ['SP', -funcSymbol.innerScope.byteSize]
+      args: ['SP', -funcSymbol.innerScope.frameSize]
     });
   },
 

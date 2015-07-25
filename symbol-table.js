@@ -147,7 +147,7 @@ SymbolTable = function(parent, symbol) {
   this._lambdaCount = 0;
   this._lambdaIDs = [];
   this.symbol = symbol;
-  this.byteSize = 12;
+  this.frameSize = 12;
   this.closureSize = 4; // Account for function address
 };
 
@@ -337,8 +337,8 @@ SymbolTable.prototype = {
 
     // Add byte offset to symbol
     if (symbol.type !== SymbolTypes.FreeVar && this._parent && (!this.parametersLocked || symbol.type !== SymbolTypes.Param)) {
-      symbol.data.offset = -this.byteSize;
-      this.byteSize += 4;
+      symbol.data.offset = -this.frameSize;
+      this.frameSize += 4;
     }
 
     this._symbols[symbol.value] = symbol;
