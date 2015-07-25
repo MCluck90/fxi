@@ -418,7 +418,7 @@ var UVU = {
         funcID = quad.arg1,
         isTopLevel = quad.arg2,
         funcSymbol = SymbolTable.getSymbol(funcID),
-        frameSize = funcSymbol.scope.byteSize + 12; // return address, this, and previous frame pointer
+        frameSize = funcSymbol.innerScope.byteSize + 12; // return address, this, and previous frame pointer
 
     // Save the frame pointer in a register
     pushQuad({
@@ -554,7 +554,7 @@ var UVU = {
       label: funcID,
       comment: quad.comment,
       instruction: 'ADI',
-      args: ['SP', -funcSymbol.scope.byteSize]
+      args: ['SP', -funcSymbol.innerScope.byteSize]
     });
   },
 
