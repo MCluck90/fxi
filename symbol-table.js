@@ -148,7 +148,7 @@ SymbolTable = function(parent, symbol) {
   this._lambdaIDs = [];
   this.symbol = symbol;
   this.frameSize = 12;
-  this.closureSize = 4; // Account for function address
+  this.closureSize = 8; // Account for function address and frame size
 };
 
 SymbolTable.prototype = {
