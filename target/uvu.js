@@ -1149,6 +1149,68 @@ var UVU = {
     rightOp.clear();
   },
 
+  /*********************
+   *  LOGIC OPERATORS  *
+   *********************/
+
+  /**
+   * Performs a logical or
+   * @param {QuadObj} quad
+   * @param {string}  quad.arg1 Result ID
+   * @param {string}  quad.arg2 Left operand ID
+   * @param {string}  quad.arg3 Right operand ID
+   */
+  OR: function(quad) {
+    var resultID = quad.arg1,
+        leftOpID = quad.arg2,
+        rightOpID = quad.arg3,
+        leftOp = this.loadValue(leftOpID),
+        rightOp = this.loadValue(rightOpID),
+        result = this.getFreeRegister();
+
+    pushQuad({
+      instruction: 'MOV',
+      args: [result, leftOp]
+    });
+    pushQuad({
+      instruction: 'OR',
+      args: [result, rightOp]
+    });
+
+    result.addValue(resultID);
+    leftOp.clear();
+    rightOp.clear();
+  },
+
+  /**
+   * Performs a logical and
+   * @param {QuadObj} quad
+   * @param {string}  quad.arg1 Result ID
+   * @param {string}  quad.arg2 Left operand ID
+   * @param {string}  quad.arg3 Right operand ID
+   */
+  AND: function(quad) {
+    var resultID = quad.arg1,
+        leftOpID = quad.arg2,
+        rightOpID = quad.arg3,
+        leftOp = this.loadValue(leftOpID),
+        rightOp = this.loadValue(rightOpID),
+        result = this.getFreeRegister();
+
+    pushQuad({
+      instruction: 'MOV',
+      args: [result, leftOp]
+    });
+    pushQuad({
+      instruction: 'AND',
+      args: [result, rightOp]
+    });
+
+    result.addValue(resultID);
+    leftOp.clear();
+    rightOp.clear();
+  },
+
   EXIT: function() {
     pushQuad({
       comment: 'Exit program',
