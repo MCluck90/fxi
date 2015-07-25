@@ -12,7 +12,8 @@ var SymbolTable = require('../symbol-table.js'),
     _previousQuad = {},
     _lastICodeLabel = '',
     _lastComment = '',
-    _lastFreeRegister = 2;
+    _lastFreeRegister = 2,
+    _freePointerQuad;
 
 /**
  * Turns an ICode quad into an object
@@ -57,6 +58,15 @@ function pushQuad(opts) {
     opts.args[1]      || '',
     opts.comment      || ''
   ]);
+
+  // Increment the start of the heap
+  if (!_freePointerQuad) {
+    _freePointerQuad = _quads[0];
+    _freePointerQuad[2] = parseInt(_freePointerQuad[2], 10);
+  } else {
+    _freePointerQuad[2] += (opts.instruction === '.BYT') ? 1 :
+                           (opts.instruction === '.INT') ? 4 : 12;
+  }
 }
 
 // Generates code for UVU ASM
@@ -174,9 +184,11 @@ var UVU = {
    * Loads in a value to a register
    * @param {Symbol}    symbol    Which symbol to load
    * @param {Register?} register  Which register to load the value into
+   * @param {Register?} FP        Which register to treat as the FP
+   * @param {bool?}     reference If true, will only load a reference
    * @returns {Register}
    */
-  _loadValue: function(symbol, register, FP) {
+  _loadValue: function(symbol, register, FP, reference) {
     FP = FP || R('FP');
     var symbolID = symbol.ID;
 
@@ -221,18 +233,22 @@ var UVU = {
         instruction: 'ADI',
         args: [register, location.offset]
       });
-      pushQuad({
-        commentForce: true,
-        instruction: 'LDR',
-        args: [register, register]
-      });
+      if (!reference) {
+        pushQuad({
+          commentForce: true,
+          instruction: 'LDR',
+          args: [register, register]
+        });
+      }
     } else {
       throw new Error('Memory type `' + location.type + '` not yet supported.');
     }
 
     // Mark this register as having this value
     register.clear(); // Only MOV will stack what's inside of a register
-    register.addValue(symbolID);
+    if (!reference) {
+      register.addValue(symbolID);
+    }
 
     return register;
   },
@@ -244,6 +260,15 @@ var UVU = {
    */
   loadValue: function(symbolID) {
     return this._loadValue(SymbolTable.getSymbol(symbolID), null);
+  },
+
+  /**
+   * Loads a reference to the value to the register
+   * @param {string}  symbolID  Which symbol to load
+   * @returns {Register}
+   */
+  loadReference: function(symbolID) {
+    return this._loadValue(SymbolTable.getSymbol(symbolID), null, null, true);
   },
 
   /**
@@ -371,6 +396,13 @@ var UVU = {
    * Initialize literals etc.
    */
   INIT: function() {
+    // Prepare the heap pointer
+    pushQuad({
+      label: 'FREE',
+      instruction: '.INT',
+      args: [4]
+    });
+
     // Generate literal values
     SymbolTable.getLiterals().forEach(function(symbol) {
       var dataType = symbol.data.type;
@@ -455,6 +487,40 @@ var UVU = {
    ***************/
 
   /**
+   * Allocates a closure object
+   * @param {QuadObj} quad
+   * @param {string}  quad.arg1 Symbol ID
+   * @param {number}  quad.arg2 Size of the closure
+   */
+  CLOSURE: function(quad) {
+    var symbolID = quad.arg1,
+        size = quad.arg2,
+        result = this.loadReference(symbolID);
+
+    // Save the current free pointer
+    pushQuad({
+      instruction: 'LDR',
+      args: [result, 'FREE']
+    });
+    pushQuad({
+      instruction: 'STR',
+      args: [RSwap, result]
+    });
+
+    // Increment the free pointer
+    pushQuad({
+      instruction: 'ADI',
+      args: [RSwap, size]
+    });
+
+    // Save the new free pointer
+    pushQuad({
+      instruction: 'STR',
+      args: [RSwap, 'FREE']
+    });
+  },
+
+  /**
    * Prepares a function call
    * @param {QuadObj} quad
    * @param {string}  quad.arg1 Function ID
@@ -507,14 +573,10 @@ var UVU = {
         instruction: 'LDA',
         args: [closureReg, funcID + '_P']
       });
-      // jscs:disable
     } else {
-
-      // TODO: Figure out how to handle non-top-level functions
       // Load the variable from the stack
-
+      this.loadValueToRegister(funcID, closureReg);
     }
-    // jscs:enable
 
     // Prepare the next frame pointer
     pushQuad({
