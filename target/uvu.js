@@ -712,6 +712,63 @@ var UVU = {
     this.saveRegister(left);
   },
 
+  /**
+   * Converts a character to a number
+   * @param {QuadObj} quad
+   * @param {string}  quad.arg1 Result ID
+   * @param {string}  quad.arg2 Character ID
+   */
+  ATOI: function(quad) {
+    var resultID = quad.arg1,
+        characterID = quad.arg2,
+        result = this.getFreeRegister();
+
+    // Load the character into the IO register
+    this.loadValueToRegister(characterID, RIO);
+
+    // Perform the conversion
+    pushQuad({
+      instruction: 'TRP',
+      args: [10]
+    });
+    RIO.clear();
+
+    // Move that value into the result
+    pushQuad({
+      instruction: 'MOV',
+      args: [result, RIO]
+    });
+    result.addValue(resultID);
+  },
+
+  /**
+   * Converts a character to a number
+   * @param {string}  quad.arg1 Result ID
+   * @param {string}  quad.arg2 Integer ID
+   */
+  ITOA: function(quad) {
+    var resultID = quad.arg1,
+        integerID = quad.arg2,
+        result = this.getFreeRegister();
+
+    // Load the character into the IO register
+    this.loadValueToRegister(integerID, RIO);
+
+    // Perform the conversion
+    pushQuad({
+      instruction: 'TRP',
+      args: [11]
+    });
+    RIO.clear();
+
+    // Move that value into the result
+    pushQuad({
+      instruction: 'MOV',
+      args: [result, RIO]
+    });
+    result.addValue(resultID);
+  },
+
   /****************
    *  ARITHMETIC  *
    ****************/
