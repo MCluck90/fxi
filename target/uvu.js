@@ -172,9 +172,9 @@ var UVU = {
    * @param {Register?} register  Which register to load the value into
    * @returns {Register}
    */
-  _loadValue: function(symbol, register) {
-    var FP = R('FP'),
-        symbolID = symbol.ID;
+  _loadValue: function(symbol, register, FP) {
+    FP = FP || R('FP');
+    var symbolID = symbol.ID;
 
     // Find out if the symbol has already been loaded
     if (register) {
@@ -250,6 +250,16 @@ var UVU = {
    */
   loadValueToRegister: function(symbolID, register) {
     return this._loadValue(SymbolTable.getSymbol(symbolID), register);
+  },
+
+  /**
+   * Loads a value using a frame pointer register
+   * @param {string}    symbolID  Which symbol to load
+   * @param {Register}  FP        Register which contains the frame pointer
+   * @returns {Register}
+   */
+  loadValueWithFP: function(symbolID, FP) {
+    return this._loadValue(SymbolTable.getSymbol(symbolID), null, FP);
   },
 
   /**
@@ -556,6 +566,31 @@ var UVU = {
       instruction: 'ADI',
       args: ['SP', -funcSymbol.innerScope.byteSize]
     });
+  },
+
+  /**
+   * Pushes a variable onto the stack
+   * @param {QuadObj} quad
+   * @param {string}  quad.arg1 Variable ID
+   */
+  PUSH: function(quad) {
+    var valueID = quad.arg1,
+        valueSymbol = SymbolTable.getSymbol(valueID),
+        FP = R(3), // FP was saved in R3 during FRAME
+        value = this.loadValueWithFP(valueID, FP);
+
+    pushQuad({
+      comment: 'Push ' + (valueSymbol.value || valueSymbol.ID),
+      instruction: 'STR',
+      args: [value, 'SP']
+    });
+    pushQuad({
+      instruction: 'ADI',
+      args: ['SP', -4]
+    });
+
+    // No reason to keep it in the register, we're about to jump
+    value.clear();
   },
 
   /**
