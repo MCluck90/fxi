@@ -7,6 +7,7 @@ var SymbolTable = require('../symbol-table.js'),
     RIO = R(7),
     _quads = [],
     _currentQuad = {},
+    _previousQuad = {},
     _lastICodeLabel = '',
     _lastComment = '',
     _lastFreeRegister = 2;
@@ -62,6 +63,7 @@ var UVU = {
     _quads = [];
 
     for (var i = 0, len = icode.length; i < len; i++) {
+      _previousQuad = _currentQuad;
       var quad = icodeToObject(icode[i]);
       _currentQuad = quad;
 
@@ -300,6 +302,23 @@ var UVU = {
     }, this);
 
     register.clear();
+  },
+
+  /**
+   * Saves any variables inside of registers to memory
+   * then clears them out
+   */
+  saveAllRegisters: function() {
+    if (_previousQuad.instruction === 'RTN' || _previousQuad.instruction === 'RETURN') {
+      // Don't bother saving all of the registers directly after a function call
+      return;
+    }
+
+    R.getLoadedRegisters().forEach(function(register) {
+      this.saveRegister(register);
+    }, this);
+
+    R.clear();
   },
 
   /**
@@ -821,6 +840,43 @@ var UVU = {
       args: [trapCode]
     });
     RIO.clear();
+  },
+
+  /***************
+   *  BRANCHING  *
+   ***************/
+
+  /**
+   * Branches if the given value is false
+   * @param {QuadObj} quad
+   * @param {string}  quad.arg1 Expression ID
+   * @param {string}  quad.arg2 Label to jump to
+   */
+  BF: function(quad) {
+    // In case we do jump, save all of the registers
+    this.saveAllRegisters();
+    var valueID = quad.arg1,
+        jumpLabel = quad.arg2,
+        value = this.loadValue(valueID);
+
+    pushQuad({
+      instruction: 'BRZ',
+      args: [value, jumpLabel]
+    });
+    value.clear();
+  },
+
+  /**
+   * Jumps straight to a label
+   * @param {QuadObj} quad
+   * @param {string}  quad.arg1 Label to jump to
+   */
+  JMP: function(quad) {
+    this.saveAllRegisters();
+    pushQuad({
+      instruction: 'JMP',
+      args: [quad.arg1]
+    });
   },
 
   EXIT: function() {
