@@ -892,8 +892,12 @@ var UVU = {
   /*********
    *  I/O  *
    *********/
+
   /**
-   * Writes a value to stdout
+   * Writes an int or char to standard output
+   * @param {QuadObj} quad
+   * @param {number}  quad.arg1 Data type
+   * @param {string}  quad.arg2 Variable ID
    */
   WRITE: function(quad) {
     var dataType = quad.arg1,
@@ -915,6 +919,31 @@ var UVU = {
       args: [trapCode]
     });
     RIO.clear();
+  },
+
+  /**
+   * Reads in an int or char to standard input
+   * @param {QuadObj} quad
+   * @param {number}  quad.arg1 Data type
+   * @param {string}  quad.arg2 Variable ID
+   */
+  READ: function(quad) {
+    var trapCode = (quad.arg1 === 'int') ? 2 : 4,
+        variableID = quad.arg2,
+        freeRegister = this.getFreeRegister();
+
+    pushQuad({
+      instruction: 'TRP',
+      args: [trapCode]
+    });
+    pushQuad({
+      instruction: 'MOV',
+      args: [freeRegister, RIO]
+    });
+
+    RIO.clear();
+    freeRegister.addValue(variableID);
+    this.saveRegister(freeRegister);
   },
 
   /***************
