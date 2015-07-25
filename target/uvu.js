@@ -425,11 +425,11 @@ var UVU = {
       pushQuad({
         comment: 'Generate pointer for ' + symbol.value + symbol.data.type,
         instruction: 'LDA',
-        args: ['R0', symbol.ID]
+        args: [RSwap, symbol.ID]
       });
       pushQuad({
         instruction: 'STR',
-        args: ['R0', symbol.ID + '_P']
+        args: [RSwap, symbol.ID + '_P']
       });
     });
 
@@ -499,7 +499,7 @@ var UVU = {
     });
 
     // Load the closure context
-    var closureReg = R(0);
+    var closureReg = RSwap;
     if (isTopLevel) {
       // Grab the generated pointer
       pushQuad({
@@ -943,6 +943,212 @@ var UVU = {
     rightOp.clear();
   },
 
+  /**
+   * Compares if one variable is less than another
+   * @param {QuadObj} quad
+   * @param {string}  quad.arg1 Result ID
+   * @param {string}  quad.arg2 Left operand ID
+   * @param {string}  quad.arg3 Right operand ID
+   */
+  LT: function(quad) {
+    var resultID = quad.arg1,
+        leftOpID = quad.arg2,
+        rightOpID = quad.arg3,
+        rightOp = this.loadValue(rightOpID),
+        leftOp = this.loadValue(leftOpID),
+        result = this.getFreeRegister();
+
+    // Compare the two operands
+    pushQuad({
+      instruction: 'MOV',
+      args: [result, leftOp]
+    });
+    pushQuad({
+      instruction: 'CMP',
+      args: [result, rightOp]
+    });
+
+    // Put -1 into the swap register for checking
+    pushQuad({
+      comment: 'Prepare -1 for less than comparison',
+      instruction: 'MOV',
+      args: [RSwap, RFalse]
+    });
+    pushQuad({
+      instruction: 'ADI',
+      args: [RSwap, -1]
+    });
+
+    // Compare against -1, will be 0 if true, 1 for anything else
+    pushQuad({
+      instruction: 'CMP',
+      args: [result, RSwap]
+    });
+
+    // Set to -1 for true and 0 for false
+    pushQuad({
+      comment: '-1 for true, 0 for false',
+      instruction: 'ADI',
+      args: [result, -1]
+    });
+
+    result.addValue(resultID);
+    leftOp.clear();
+    rightOp.clear();
+  },
+
+  /**
+   * Determines if two values are less than or equal to each other
+   * @param {QuadObj} quad
+   * @param {string}  quad.arg1 Result ID
+   * @param {string}  quad.arg2 Left operand ID
+   * @param {string}  quad.arg3 Right operand ID
+   */
+  LE: function(quad) {
+    var resultID = quad.arg1,
+        leftOpID = quad.arg2,
+        rightOpID = quad.arg3,
+        leftOp = this.loadValue(leftOpID),
+        rightOp = this.loadValue(rightOpID),
+        result = this.getFreeRegister();
+
+    // Compare the two values
+    pushQuad({
+      instruction: 'MOV',
+      args: [result, leftOp]
+    });
+
+    // Possible states: -1 for less than, 0 for equal, 1 for greater
+    pushQuad({
+      instruction: 'CMP',
+      args: [result, rightOp]
+    });
+
+    // Will produce false only for greater than
+    pushQuad({
+      instruction: 'ADI',
+      args: [result, -1]
+    });
+
+    result.addValue(resultID);
+    leftOp.clear();
+    rightOp.clear();
+  },
+
+  /**
+   * Determines if one value is greater than the other
+   * @param {QuadObj} quad
+   * @param {string}  quad.arg1 Result ID
+   * @param {string}  quad.arg2 Left operand ID
+   * @param {string}  quad.arg3 Right operand ID
+   */
+  GT: function(quad) {
+    var resultID = quad.arg1,
+        leftOpID = quad.arg2,
+        rightOpID = quad.arg3,
+        leftOp = this.loadValue(leftOpID),
+        rightOp = this.loadValue(rightOpID),
+        result = this.getFreeRegister();
+
+    // Compare the two operands
+    pushQuad({
+      instruction: 'MOV',
+      args: [result, leftOp]
+    });
+    pushQuad({
+      instruction: 'CMP',
+      args: [result, rightOp]
+    });
+
+    // Compare result against 1
+    // Possible states -1 for less than or equal, 0 for greater than
+    pushQuad({
+      instruction: 'CMP',
+      args: [result, RTrue]
+    });
+
+    // Switches to false for less than or equal
+    pushQuad({
+      instruction: 'ADI',
+      args: [result, 1]
+    });
+
+    result.addValue(resultID);
+    leftOp.clear();
+    rightOp.clear();
+  },
+
+  /**
+   * Determines if one value is greater than
+   * or equal to another
+   * @param {QuadObj} quad
+   * @param {string}  quad.arg1 Result ID
+   * @param {string}  quad.arg2 Left operand ID
+   * @param {string}  quad.arg3 Right operand ID
+   */
+  GE: function(quad) {
+    var resultID = quad.arg1,
+        leftOpID = quad.arg2,
+        rightOpID = quad.arg3,
+        leftOp = this.loadValue(leftOpID),
+        rightOp = this.loadValue(rightOpID),
+        result = this.getFreeRegister();
+
+    // Compare the two operands
+    pushQuad({
+      instruction: 'MOV',
+      args: [result, leftOp]
+    });
+
+    // Possible states -1 for less than, 0 for equal, 1 for greater
+    pushQuad({
+      instruction: 'CMP',
+      args: [result, rightOp]
+    });
+
+    // Will produce false for less than
+    pushQuad({
+      instruction: 'ADI',
+      args: [result, 1]
+    });
+
+    result.addValue(resultID);
+    leftOp.clear();
+    rightOp.clear();
+  },
+
+  /**
+   * Determines if two variables are not equal
+   * @param {QuadObj} quad
+   * @param {string}  quad.arg1 Result ID
+   * @param {string}  quad.arg2 Left operand ID
+   * @param {string}  quad.arg3 Right operand ID
+   */
+  NE: function(quad) {
+    var resultID = quad.arg1,
+        leftOpID = quad.arg2,
+        rightOpID = quad.arg3,
+        leftOp = this.loadValue(leftOpID),
+        rightOp = this.loadValue(rightOpID),
+        result = this.getFreeRegister();
+
+    // Compare the two elements
+    pushQuad({
+      instruction: 'MOV',
+      args: [result, leftOp]
+    });
+
+    // Will produce false when equal
+    pushQuad({
+      instruction: 'CMP',
+      args: [result, rightOp]
+    });
+
+    result.addValue(resultID);
+    leftOp.clear();
+    rightOp.clear();
+  },
+
   EXIT: function() {
     pushQuad({
       comment: 'Exit program',
@@ -964,12 +1170,12 @@ var UVU = {
         label: routineLabel,
         comment: 'Print in case of ' + typeOfError,
         instruction: 'LDA',
-        args: ['R0', dataLabel]
+        args: [RSwap, dataLabel]
       });
       pushQuad({
         label: routineLabel + '.print',
         instruction: 'LDB',
-        args: [RIO, 'R0']
+        args: [RIO, RSwap]
       });
       pushQuad({
         instruction: 'BRZ',
@@ -981,7 +1187,7 @@ var UVU = {
       });
       pushQuad({
         instruction: 'ADI',
-        args: ['R0', 1]
+        args: [RSwap, 1]
       });
       pushQuad({
         instruction: 'JMP',
