@@ -3,6 +3,8 @@
 var SymbolTable = require('../symbol-table.js'),
     SymbolTypes = SymbolTable.SymbolTypes,
     R = require('../register.js'),
+    RFalse = R(0),
+    RTrue = R(1),
     RSwap = R(6),
     RIO = R(7),
     _quads = [],
@@ -429,6 +431,22 @@ var UVU = {
         instruction: 'STR',
         args: ['R0', symbol.ID + '_P']
       });
+    });
+
+    // Preload true and false
+    pushQuad({
+      comment: 'Load false',
+      instruction: 'CMP',
+      args: [RFalse, RFalse]
+    });
+    pushQuad({
+      comment: 'Load true',
+      instruction: 'CMP',
+      args: [RTrue, RTrue]
+    });
+    pushQuad({
+      instruction: 'ADI',
+      args: [RTrue, 1]
     });
   },
 
@@ -877,6 +895,52 @@ var UVU = {
       instruction: 'JMP',
       args: [quad.arg1]
     });
+  },
+
+  /*****************
+   *  COMPARISONS  *
+   *****************/
+
+  /**
+   * Compares if two elements are equal
+   * @param {QuadObj} quad
+   * @param {string}  quad.arg1 Result ID
+   * @param {string}  quad.arg2 Left operand ID
+   * @param {string}  quad.arg3 Right operand ID
+   */
+  EQ: function(quad) {
+    var resultID = quad.arg1,
+        leftOpID = quad.arg2,
+        rightOpID = quad.arg3,
+        leftOp = this.loadValue(leftOpID),
+        rightOp = this.loadValue(rightOpID),
+        result = this.getFreeRegister();
+
+    // Compare the two elements
+    pushQuad({
+      instruction: 'MOV',
+      args: [result, leftOp]
+    });
+    pushQuad({
+      instruction: 'CMP',
+      args: [result, rightOp]
+    });
+
+    // Normalize to 0 or 1
+    pushQuad({
+      instruction: 'AND',
+      args: [result, RTrue]
+    });
+
+    // Result will be -1 (true) or 0 (false)
+    pushQuad({
+      instruction: 'ADI',
+      args: [result, -1]
+    });
+
+    result.addValue(resultID);
+    leftOp.clear();
+    rightOp.clear();
   },
 
   EXIT: function() {
