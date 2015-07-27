@@ -556,34 +556,45 @@ var UVU = {
    * @param {bool}    quad.arg2 If true, function is top level and the pointer must be loaded
    */
   FRAME: function(quad) {
+    R.clear();
     var FP = R(3),
         funcID = quad.arg1,
         isTopLevel = quad.arg2,
         funcSymbol = SymbolTable.getSymbol(funcID),
-        frameSize;
+        functionAddress = R(2),
+        frameSize = R(4);
 
-    // Load the address of the closure object to find the frame size
     if (isTopLevel) {
-      frameSize = this.getFreeRegister();
       pushQuad({
+        comment: 'Find global function address',
         instruction: 'LDA',
-        args: [frameSize, funcID + '_P']
+        args: [functionAddress, funcID + '_P']
       });
     } else {
-      frameSize = this.loadValue(funcID);
+      functionAddress = this.loadValueToRegister(funcID, functionAddress);
     }
-    frameSize.clear();
 
-    // Find the frame size
     pushQuad({
-      comment: 'Find the frame size',
+      comment: 'Prepare the frame size',
+      instruction: 'MOV',
+      args: [frameSize, functionAddress]
+    });
+    pushQuad({
       instruction: 'ADI',
       args: [frameSize, 4]
     });
     pushQuad({
+      comment: 'Load function address',
+      instruction: 'LDR',
+      args: [functionAddress, functionAddress]
+    });
+    pushQuad({
+      comment: 'Load frame size',
       instruction: 'LDR',
       args: [frameSize, frameSize]
     });
+    functionAddress.clear();
+    frameSize.clear();
 
     // Flip the size for comparison
     pushQuad({
@@ -712,8 +723,8 @@ var UVU = {
     // Start the function call
     pushQuad({
       comment: 'Call ' + functionID,
-      instruction: 'JMP',
-      args: [functionID]
+      instruction: 'JMR',
+      args: [R(2)]
     });
   },
 
