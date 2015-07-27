@@ -145,8 +145,8 @@ var UVU = {
       store = 'STR';
     }
 
-    // Memory: Literals
     if (SymbolTable.isLiteral(symbol)) {
+      // Memory: Literals
       return {
         type: 'memory',
         label: symbol.ID,

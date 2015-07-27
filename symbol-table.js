@@ -273,6 +273,12 @@ SymbolTable.prototype = {
       }
     }
 
+    // If it's a global function, return it
+    var isGlobalFunction = this.getGlobal().findSymbol(symbol.value);
+    if (isGlobalFunction && isGlobalFunction.type === SymbolTypes.Fn) {
+      return isGlobalFunction;
+    }
+
     // If it might be a free variable, find out for sure. Otherwise, don't add it
     var freeVar;
     if (symbol.type === SymbolTypes.FreeVar) {
