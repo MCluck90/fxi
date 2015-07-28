@@ -205,8 +205,7 @@ var UVU = {
       }
 
       // Load up a free register
-      // TODO: Save contents of register first if needed
-      register = R.getFreeRegister();
+      register = this.getFreeRegister();
     }
 
     // Figure out how to load up the variable
