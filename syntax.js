@@ -499,7 +499,7 @@ var Syntax = {
           type: SymbolTypes.FreeVar,
           value: identifier
         }));
-        if (symbol.type === SymbolTypes.FreeVar) {
+        if (symbol && symbol.type === SymbolTypes.FreeVar) {
           TypeInference.addTypeDependency(symbol.ID, symbol.data.original.ID);
         }
       }

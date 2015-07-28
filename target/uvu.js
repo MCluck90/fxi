@@ -240,6 +240,38 @@ var UVU = {
           args: [register, register]
         });
       }
+    } else if (location.type === 'heap') {
+      // Load the value relative to the current context
+      pushQuad({
+        comment: 'Load up the context',
+        commentForce: true,
+        instruction: 'MOV',
+        args: [register, FP]
+      });
+      pushQuad({
+        commentForce: true,
+        instruction: 'ADI',
+        args: [register, -8]
+      });
+      pushQuad({
+        commentForce: true,
+        instruction: 'LDR',
+        args: [register, register]
+      });
+
+      // Move to free variable offset
+      pushQuad({
+        commentForce: true,
+        instruction: 'ADI',
+        args: [register, location.offset]
+      });
+
+      pushQuad({
+        comment: comment,
+        commentForce: true,
+        instruction: location.load,
+        args: [register, register]
+      });
     } else {
       throw new Error('Memory type `' + location.type + '` not yet supported.');
     }
@@ -559,56 +591,33 @@ var UVU = {
       instruction: 'STR',
       args: [register, 'FREE']
     });
+  },
 
-    return;
-    var symbolID = quad.arg1,
-        symbol = SymbolTable.getSymbol(symbolID),
-        size = quad.arg2,
-        result = this.loadReference(symbolID),
-        frameSize = this.getFreeRegister();
+  /**
+   * Copies the value to a free variable
+   * @param {QuadObj} quad
+   * @param {string}  quad.arg1 Closure ID
+   * @param {string}  quad.arg2 Source value ID
+   * @param {string}  quad.arg3 Destination value ID
+   */
+  FREEVAR: function(quad) {
+    var closureID = quad.arg1,
+        sourceID = quad.arg2,
+        destID = quad.arg3,
+        closureReg = this.loadValue(closureID),
+        source = this.loadValue(sourceID),
+        destSymbol = SymbolTable.getSymbol(destID);
 
-    // Prepare the frame size
+    closureReg.clear();
+    // Get the pointer to the free variable
     pushQuad({
-      comment: 'Prepare frame size value',
-      instruction: 'MOV',
-      args: [frameSize, RFalse]
-    });
-    pushQuad({
+      comment: 'Point to free variable',
       instruction: 'ADI',
-      args: [frameSize, symbol.innerScope.frameSize]
-    });
-
-    // Save the current free pointer
-    pushQuad({
-      instruction: 'LDR',
-      args: [result, 'FREE']
+      args: [closureReg, destSymbol.data.offset]
     });
     pushQuad({
       instruction: 'STR',
-      args: [RSwap, result]
-    });
-
-    // Save the frame size
-    pushQuad({
-      comment: 'Save frame size',
-      instruction: 'ADI',
-      args: [RSwap, 4]
-    });
-    pushQuad({
-      instruction: 'STR',
-      args: [frameSize, RSwap]
-    });
-
-    // Increment the free pointer
-    pushQuad({
-      instruction: 'ADI',
-      args: [RSwap, size]
-    });
-
-    // Save the new free pointer
-    pushQuad({
-      instruction: 'STR',
-      args: [RSwap, 'FREE']
+      args: [source, closureReg]
     });
   },
 
