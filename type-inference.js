@@ -428,7 +428,9 @@ TypeInference = {
             value: '$' + paramID,
             type: SymbolTypes.Param
           }));
-      unresolvedNode.params.push(parameter.ID);
+      if (index > unresolvedNode.params.length) {
+        unresolvedNode.params.push(parameter.ID);
+      }
     } else {
       paramID = unresolvedNode.params[index];
     }
