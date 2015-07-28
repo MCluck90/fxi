@@ -769,10 +769,14 @@ var UVU = {
         args: [functionAddress, functionID + '_P']
       });
     } else {
+      pushQuad({
+        instruction: 'MOV',
+        args: [functionAddress, R(3)]
+      });
       var location = this.getLocation(functionID);
       pushQuad({
         instruction: 'ADI',
-        args: [R(3), location.offset]
+        args: [functionAddress, location.offset]
       });
       pushQuad({
         instruction: 'LDR',
