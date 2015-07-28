@@ -499,6 +499,69 @@ var UVU = {
    */
   CLOSURE: function(quad) {
     var symbolID = quad.arg1,
+        size = quad.arg2,
+        symbol = SymbolTable.getSymbol(symbolID),
+        frameSize = symbol.innerScope.frameSize,
+        closureSize = symbol.innerScope.closureSize,
+        register = this.getFreeRegister();
+
+    // Load the current free pointer and save that as the closure value
+    pushQuad({
+      comment: 'Load closure pointer',
+      instruction: 'LDR',
+      args: [register, 'FREE']
+    });
+    register.addValue(symbolID);
+    this.saveRegister(register);
+    register.clear();
+
+    // Get the address of the function and store it
+    pushQuad({
+      comment: 'Load function address',
+      instruction: 'LDA',
+      args: [RSwap, symbolID]
+    });
+    pushQuad({
+      comment: 'Store in closure object',
+      instruction: 'STR',
+      args: [RSwap, register]
+    });
+
+    // Save the frame size
+    pushQuad({
+      comment: 'Prepare frame size',
+      instruction: 'MOV',
+      args: [RSwap, RFalse]
+    });
+    pushQuad({
+      instruction: 'ADI',
+      args: [RSwap, frameSize]
+    });
+
+    pushQuad({
+      comment: 'Align with frame size value',
+      instruction: 'ADI',
+      args: [register, 4]
+    });
+    pushQuad({
+      comment: 'Store the frame size',
+      instruction: 'STR',
+      args: [RSwap, register]
+    });
+
+    // Increment the free pointer
+    pushQuad({
+      comment: 'Increment the free pointer',
+      instruction: 'ADI',
+      args: [register, closureSize - 4]
+    });
+    pushQuad({
+      instruction: 'STR',
+      args: [register, 'FREE']
+    });
+
+    return;
+    var symbolID = quad.arg1,
         symbol = SymbolTable.getSymbol(symbolID),
         size = quad.arg2,
         result = this.loadReference(symbolID),
@@ -533,7 +596,7 @@ var UVU = {
     });
     pushQuad({
       instruction: 'STR',
-      args: [RSwap, frameSize]
+      args: [frameSize, RSwap]
     });
 
     // Increment the free pointer
@@ -710,6 +773,10 @@ var UVU = {
       pushQuad({
         instruction: 'ADI',
         args: [R(3), location.offset]
+      });
+      pushQuad({
+        instruction: 'LDR',
+        args: [functionAddress, functionAddress]
       });
     }
 
