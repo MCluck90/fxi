@@ -584,11 +584,6 @@ var UVU = {
       args: [frameSize, 4]
     });
     pushQuad({
-      comment: 'Load function address',
-      instruction: 'LDR',
-      args: [functionAddress, functionAddress]
-    });
-    pushQuad({
       comment: 'Load frame size',
       instruction: 'LDR',
       args: [frameSize, frameSize]
@@ -699,7 +694,29 @@ var UVU = {
    */
   CALL: function(quad) {
     // TODO: Will probably need to be fixed for non-top-level functions
-    var functionID = quad.arg1;
+    var functionID = quad.arg1,
+        funcSymbol = SymbolTable.getSymbol(functionID),
+        isTopLevel = !funcSymbol.scope._parent,
+        functionAddress = this.getFreeRegister();
+
+    if (isTopLevel) {
+      pushQuad({
+        comment: 'Find global function address',
+        instruction: 'LDA',
+        args: [functionAddress, functionID + '_P']
+      });
+    } else {
+      var location = this.getLocation(functionID);
+      pushQuad({
+        instruction: 'ADI',
+        args: [R(3), location.offset]
+      });
+    }
+
+    pushQuad({
+      instruction: 'LDR',
+      args: [functionAddress, functionAddress]
+    });
 
     // Load the PC
     pushQuad({
@@ -724,7 +741,7 @@ var UVU = {
     pushQuad({
       comment: 'Call ' + functionID,
       instruction: 'JMR',
-      args: [R(2)]
+      args: [functionAddress]
     });
   },
 
