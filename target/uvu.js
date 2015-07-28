@@ -512,7 +512,7 @@ var UVU = {
     });
     pushQuad({
       instruction: 'ADI',
-      args: [frameSize, symbol.innerScope.byteSize]
+      args: [frameSize, symbol.innerScope.frameSize]
     });
 
     // Save the current free pointer

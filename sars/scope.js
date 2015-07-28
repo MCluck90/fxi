@@ -8,6 +8,7 @@ var Scope = function(symbol) {
   }
 
   this.ID = symbol.ID;
+  this.identifier = symbol.value;
   this.symbol = symbol;
   this.type = symbol.data.type;
   this.returnType = symbol.data.returnType;
