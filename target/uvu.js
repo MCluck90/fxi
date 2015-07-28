@@ -354,6 +354,40 @@ var UVU = {
           instruction: 'STR',
           args: [register, RSwap]
         });
+      } else if (location.type === 'heap') {
+        // Load in the context pointer
+        pushQuad({
+          comment: 'Load in the context',
+          commentForce: true,
+          instruction: 'MOV',
+          args: [RSwap, FP]
+        });
+        pushQuad({
+          commentForce: true,
+          instruction: 'ADI',
+          args: [RSwap, -8]
+        });
+        pushQuad({
+          commentForce: true,
+          instruction: 'LDR',
+          args: [RSwap, RSwap]
+        });
+
+        // Increment by the offset
+        pushQuad({
+          comment: 'Increment to free variable',
+          commentForce: true,
+          instruction: 'ADI',
+          args: [RSwap, location.offset]
+        });
+
+        // Save the value from the register
+        pushQuad({
+          comment: comment,
+          commentForce: true,
+          instruction: location.store,
+          args: [register, RSwap]
+        });
       } else {
         throw new Error('Memory type `' + location.type + '` not yet supported.');
       }
