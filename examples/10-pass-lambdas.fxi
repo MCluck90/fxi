@@ -1,0 +1,9 @@
+f =>(g<(int)->int>, x) {
+  rtn g(x);
+}
+
+main =>() {
+  write f(=>(x) {
+    rtn x * 3;
+  }, 10);
+}

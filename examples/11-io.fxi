@@ -1,0 +1,23 @@
+main =>() {
+  write '>';
+  write ' ';
+  read x;
+  if (x > 60) {
+    write 'B';
+    write 'i';
+    write 'g';
+  } else if (x > 30) {
+    write 'M';
+    write 'e';
+    write 'd';
+    write 'i';
+    write 'u';
+    write 'm';
+  } else {
+    write 'S';
+    write 'm';
+    write 'a';
+    write 'l';
+    write 'l';
+  }
+}

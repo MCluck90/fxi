@@ -1,0 +1,11 @@
+main =>() {
+  x = 1;
+  counter =>() {
+    write x;
+    write '\n';
+    x = x + 1;
+  }
+  counter();
+  counter();
+  counter();
+}

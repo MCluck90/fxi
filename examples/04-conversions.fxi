@@ -1,0 +1,11 @@
+main =>() {
+  x = atoi('9');
+  y = atoi('3');
+  z = x * y;
+  write z; // 27
+  write '\n';
+  c = itoa(z); // Empty since 27 cannot convert (appears as space)
+  write c;
+  c = itoa(x);
+  write c;
+}

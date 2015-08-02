@@ -1,0 +1,11 @@
+add =>(x, y) {
+  rtn x + y;
+}
+
+exec =>(f<(int, int)->int>, x, y) {
+  rtn f(x, y);
+}
+
+main =>() {
+  write exec(add, 18, 5); // 23
+}

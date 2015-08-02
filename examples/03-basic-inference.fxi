@@ -1,0 +1,6 @@
+main =>() {
+  x = 9000;
+  c = '!';
+  write x;
+  write c;
+}

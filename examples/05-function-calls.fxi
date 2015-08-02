@@ -1,0 +1,7 @@
+add =>(x, y) {
+  rtn x + y;
+}
+
+main =>() {
+  write add(18, 5); // 23
+}

@@ -1,0 +1,17 @@
+main =>() {
+  prev = 0;
+  current = 1;
+  fib =>() {
+    write current;
+    write '\n';
+    temp = current;
+    current = current + prev;
+    prev = temp;
+  }
+
+  i = 0;
+  while (i < 10) {
+    fib();
+    i = i + 1;
+  }
+}

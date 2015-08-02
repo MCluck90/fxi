@@ -1,0 +1,11 @@
+exec =>(f<(int)->void>, x) {
+  f(x);
+}
+
+main =>() {
+  x = 10;
+  f =>(y) {
+    write x + y;
+  }
+  exec(f, 13);
+}
