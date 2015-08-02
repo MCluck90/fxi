@@ -267,6 +267,7 @@ SymbolTable.prototype = {
         if (!lambdaID) {
           throw new Error('Unable to retrieve lambda: ' + symbol.value);
         }
+        this._lambdaCount++;
         return allSymbols[lambdaID];
       } else {
         return this.findSymbol(symbol.value);

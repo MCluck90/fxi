@@ -716,6 +716,12 @@ ICode = {
 
     if (symbol) {
       var comment = 'Initialize ' + symbol.value + '(';
+      if (!symbol.data.params) {
+        symbol.data.params = [];
+        symbol.data.type = '()->void';
+        symbol.data.returnType = 'void';
+      }
+      symbol.data.params = symbol.data.params || [];
       symbol.data.params.forEach(function(param, index) {
         if (index > 0) {
           comment += ', ';

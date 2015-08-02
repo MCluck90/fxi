@@ -7,6 +7,7 @@ var SymbolTable = require('../symbol-table.js'),
     RTrue = R(1),
     RSwap = R(6),
     RIO = R(7),
+    R3_LOCKED = false,
     _quads = [],
     _currentQuad = {},
     _previousQuad = {},
@@ -421,6 +422,10 @@ var UVU = {
   getFreeRegister: function() {
     var startIndex = _lastFreeRegister,
         register = R(startIndex);
+    if (R3_LOCKED && startIndex === 3) {
+      startIndex = 4;
+      register = R(startIndex);
+    }
     if (register.isEmpty()) {
       _lastFreeRegister++;
       if (_lastFreeRegister > 5) {
@@ -432,6 +437,10 @@ var UVU = {
     // Check all other possible free registers
     _lastFreeRegister++;
     while (_lastFreeRegister !== startIndex) {
+      if (_lastFreeRegister === 3 && R3_LOCKED) {
+        _lastFreeRegister++;
+        continue;
+      }
       register = R(_lastFreeRegister);
       if (register.isEmpty()) {
         _lastFreeRegister++;
@@ -661,6 +670,7 @@ var UVU = {
    * @param {bool}    quad.arg2 If true, function is top level and the pointer must be loaded
    */
   FRAME: function(quad) {
+    R3_LOCKED = true;
     R.clear();
     var FP = R(3),
         funcID = quad.arg1,
@@ -856,6 +866,8 @@ var UVU = {
       instruction: 'JMR',
       args: [functionAddress]
     });
+
+    R3_LOCKED = false;
   },
 
   /**
