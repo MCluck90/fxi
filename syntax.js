@@ -402,6 +402,12 @@ var Syntax = {
       Semantics.write();
     } else if (lexeme === 'read') {
       checkLexeme('read');
+
+      // Add the symbol if it doesn't exist
+      SymbolTable().addSymbol(new Symbol({
+        type: SymbolTypes.LocalVar,
+        value: tokens.currentToken.lexeme
+      }));
       Semantics.iPush(tokens.currentToken.lexeme);
       Semantics.iExist();
       checkTokenType(TokenTypes.IDENTIFIER);
