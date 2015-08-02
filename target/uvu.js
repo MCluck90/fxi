@@ -81,6 +81,7 @@ var UVU = {
       _currentQuad = quad;
 
       try {
+        this.saveAllRegisters();
         this[quad.instruction](quad);
       } catch(e) {
         if (!this[quad.instruction]) {
@@ -167,7 +168,7 @@ var UVU = {
       return {
         type: 'memory',
         label: symbol.ID + '_P',
-        load: load,
+        load: 'LDA',
         store: store
       };
     } else {
