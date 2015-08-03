@@ -39,8 +39,13 @@ var JS = {
         _functionStarted = false;
       }
 
+      // Start while blocks
+      if (quad.label.indexOf('WHILE') === 0) {
+        _lines.push('while(true) {');
+      }
+
       // Close out conditional blocks
-      if (quad.label.indexOf('SKIP') === 0) {
+      if (quad.label.indexOf('SKIP') === 0 || quad.label.indexOf('_WHILE') === 0) {
         _lines.push('}');
         if (_previousQuad.arg1.indexOf('SKIP') === 0) {
           _lines.push('else {');
@@ -377,10 +382,17 @@ var JS = {
    * if statement
    * @param {QuadObj} quad
    * @param {string}  quad.arg1 ID of the variable to check
+   * @param {string}  quad.arg2 Label to branch to
    */
   BF: function(quad) {
     var value = this.getValue(quad.arg1);
-    _lines.push('if (' + value + ') {');
+    if (quad.arg2.indexOf('WHILE') !== -1) {
+      _lines.push('if (!' + value + ') {');
+      _lines.push('break;');
+      _lines.push('}');
+    } else {
+      _lines.push('if (' + value + ') {');
+    }
   },
 
   /**
