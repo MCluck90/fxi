@@ -414,6 +414,13 @@ SymbolTable.prototype = {
     });
   },
 
+  getLocalVariables: function() {
+    var self = this;
+    return Object.keys(this._symbols).map(function(id) {
+      return self._symbols[id];
+    });
+  },
+
   /**
    * Generates a unique symbol ID
    * @param {Symbol|string} symbol  A symbol or a symbol type string

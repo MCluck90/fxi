@@ -112,6 +112,11 @@ var JS = {
     });
     declaration += ') {';
     _lines.push(declaration);
+
+    // Generate local variables
+    funcSymbol.innerScope.getLocalVariables().forEach(function(symbol) {
+      _lines.push('var ' + symbol.ID + ';');
+    });
   },
 
   /**
@@ -150,7 +155,23 @@ var JS = {
    */
   WRITE: function(quad) {
     var value = this.getValue(quad.arg2);
-    _lines.push('process.stdout.write(' + value + ');');
+    _lines.push('process.stdout.write(' + value + '.toString());');
+  },
+
+  /**********************
+   * DATA MANIPULATION  *
+   **********************/
+
+  /**
+   * Assigns a value to a variable
+   * @param {QuadObj} quad
+   * @param {string}  quad.arg1 Left hand side
+   * @param {string}  quad.arg2 Right hand side
+   */
+  MOV: function(quad) {
+    var lhs = this.getValue(quad.arg1),
+        rhs = this.getValue(quad.arg2);
+    _lines.push(lhs + ' = ' + rhs + ';');
   },
 
   /**
