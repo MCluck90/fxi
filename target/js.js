@@ -39,6 +39,14 @@ var JS = {
         _functionStarted = false;
       }
 
+      // Close out conditional blocks
+      if (quad.label.indexOf('SKIP') === 0) {
+        _lines.push('}');
+        if (_previousQuad.arg1.indexOf('SKIP') === 0) {
+          _lines.push('else {');
+        }
+      }
+
       try {
         this[quad.instruction](quad);
       } catch(e) {
@@ -181,6 +189,26 @@ var JS = {
   WRITE: function(quad) {
     var value = this.getValue(quad.arg2);
     _lines.push('process.stdout.write(' + value + '.toString());');
+  },
+
+  /***************
+   *  BRANCHING  *
+   ***************/
+
+  /**
+   * if statement
+   * @param {QuadObj} quad
+   * @param {string}  quad.arg1 ID of the variable to check
+   */
+  BF: function(quad) {
+    var value = this.getValue(quad.arg1);
+    _lines.push('if (' + value + ') {');
+  },
+
+  /**
+   * Used to close out conditionals
+   */
+  JMP: function(quad) {
   },
 
   /**********************
