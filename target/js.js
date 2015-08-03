@@ -169,6 +169,93 @@ var JS = {
     _lines.push(result + ' = ' + lhs + ' / ' + rhs + ';');
   },
 
+  /*****************
+   *  COMPARISONS  *
+   *****************/
+  /**
+   * Compares if two elements are equal
+   * @param {QuadObj} quad
+   * @param {string}  quad.arg1 Result ID
+   * @param {string}  quad.arg2 Left operand ID
+   * @param {string}  quad.arg3 Right operand ID
+   */
+  EQ: function(quad) {
+    var result = this.getValue(quad.arg1),
+        lhs = this.getValue(quad.arg2),
+        rhs = this.getValue(quad.arg3);
+    _lines.push(result + ' = ' + lhs + ' === ' + rhs + ';');
+  },
+
+  /**
+   * Determines if two variables are not equal
+   * @param {QuadObj} quad
+   * @param {string}  quad.arg1 Result ID
+   * @param {string}  quad.arg2 Left operand ID
+   * @param {string}  quad.arg3 Right operand ID
+   */
+  NE: function(quad) {
+    var result = this.getValue(quad.arg1),
+        lhs = this.getValue(quad.arg2),
+        rhs = this.getValue(quad.arg3);
+    _lines.push(result + ' = ' + lhs + ' !== ' + rhs + ';');
+  },
+
+  /**
+   * Compares if one variable is less than another
+   * @param {QuadObj} quad
+   * @param {string}  quad.arg1 Result ID
+   * @param {string}  quad.arg2 Left operand ID
+   * @param {string}  quad.arg3 Right operand ID
+   */
+  LT: function(quad) {
+    var result = this.getValue(quad.arg1),
+        lhs = this.getValue(quad.arg2),
+        rhs = this.getValue(quad.arg3);
+    _lines.push(result + ' = ' + lhs + ' < ' + rhs + ';');
+  },
+
+  /**
+   * Determines if two values are less than or equal to each other
+   * @param {QuadObj} quad
+   * @param {string}  quad.arg1 Result ID
+   * @param {string}  quad.arg2 Left operand ID
+   * @param {string}  quad.arg3 Right operand ID
+   */
+  LE: function(quad) {
+    var result = this.getValue(quad.arg1),
+        lhs = this.getValue(quad.arg2),
+        rhs = this.getValue(quad.arg3);
+    _lines.push(result + ' = ' + lhs + ' <= ' + rhs + ';');
+  },
+
+  /**
+   * Compares if one variable is greater than another
+   * @param {QuadObj} quad
+   * @param {string}  quad.arg1 Result ID
+   * @param {string}  quad.arg2 Left operand ID
+   * @param {string}  quad.arg3 Right operand ID
+   */
+  GT: function(quad) {
+    var result = this.getValue(quad.arg1),
+        lhs = this.getValue(quad.arg2),
+        rhs = this.getValue(quad.arg3);
+    _lines.push(result + ' = ' + lhs + ' > ' + rhs + ';');
+  },
+
+  /**
+   * Determines if two values are greater than or equal to each other
+   * @param {QuadObj} quad
+   * @param {string}  quad.arg1 Result ID
+   * @param {string}  quad.arg2 Left operand ID
+   * @param {string}  quad.arg3 Right operand ID
+   */
+  GE: function(quad) {
+    var result = this.getValue(quad.arg1),
+        lhs = this.getValue(quad.arg2),
+        rhs = this.getValue(quad.arg3);
+    _lines.push(result + ' = ' + lhs + ' >= ' + rhs + ';');
+  },
+
   /***************
    *  FUNCTIONS  *
    ***************/
