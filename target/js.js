@@ -69,9 +69,22 @@ var JS = {
   },
 
   /**
-   * Generate all of the global literals
+   * Initializes the program
    */
   INIT: function() {
+    // Prepare reading
+    _lines.push('process.stdin.resume();');
+    _lines.push('var fs = require(\'fs\');');
+    _lines.push('function $__read(isInt) {');
+    _lines.push('var response = fs.readSync(process.stdin.fd, 100, 0, \'utf8\');');
+    _lines.push('process.stdin.pause();');
+    _lines.push('if (!isInt) {');
+    _lines.push('return response[0][0];');
+    _lines.push('}');
+    _lines.push('return parseInt(response[0], 10);');
+    _lines.push('}');
+
+    // Generates literals
     SymbolTable.getLiterals().forEach(function(symbol) {
       _lines.push('var ' + symbol.ID + ' = ' + symbol.value + ';');
     });
@@ -147,6 +160,18 @@ var JS = {
   /*********
    *  I/O  *
    *********/
+
+ /**
+  * Reads in a value from stdin
+  * @param {QuadObj}  quad
+  * @param {string}   quad.arg1 Type of read
+  * @param {string}   quad.arg2 ID of the variable to read to
+  */
+  READ: function(quad) {
+    var isInt = (quad.arg1 === 'int') ? 'true' : 'false',
+        value = this.getValue(quad.arg2);
+    _lines.push(value + ' = $__read(' + isInt + ');');
+  },
 
   /**
    * Writes out a value to stdout
