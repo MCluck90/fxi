@@ -110,6 +110,65 @@ var JS = {
     }
   },
 
+  /****************
+   *  ARITHMETIC  *
+   ****************/
+  /**
+   * Adds together two variables and stores the result in a third
+   * @param {QuadObj} quad
+   * @param {string}  quad.arg1 Result ID
+   * @param {string}  quad.arg2 Left operand ID
+   * @param {string}  quad.arg3 Right operand ID
+   */
+  ADD: function(quad) {
+    var result = this.getValue(quad.arg1),
+        lhs = this.getValue(quad.arg2),
+        rhs = this.getValue(quad.arg3);
+    _lines.push(result + ' = ' + lhs + ' + ' + rhs + ';');
+  },
+
+  /**
+   * Subtract two variables and store their result in a third
+   * @param {QuadObj} quad
+   * @param {string}  quad.arg1 Result ID
+   * @param {string}  quad.arg2 Left operand ID
+   * @param {string}  quad.arg3 Right operand ID
+   */
+  SUB: function(quad) {
+    var result = this.getValue(quad.arg1),
+        lhs = this.getValue(quad.arg2),
+        rhs = this.getValue(quad.arg3);
+    _lines.push(result + ' = ' + lhs + ' - ' + rhs + ';');
+  },
+
+  /**
+   * Multiply two variables and store their result in a third
+   * @param {QuadObj} quad
+   * @param {string}  quad.arg1 Result ID
+   * @param {string}  quad.arg2 Left operand ID
+   * @param {string}  quad.arg3 Right operand ID
+   */
+  MUL: function(quad) {
+    var result = this.getValue(quad.arg1),
+        lhs = this.getValue(quad.arg2),
+        rhs = this.getValue(quad.arg3);
+    _lines.push(result + ' = ' + lhs + ' * ' + rhs + ';');
+  },
+
+  /**
+   * Divide two variables and store their result in a third
+   * @param {QuadObj} quad
+   * @param {string}  quad.arg1 Result ID
+   * @param {string}  quad.arg2 Numerator ID
+   * @param {string}  quad.arg3 Divisor ID
+   */
+  DIV: function(quad) {
+    var result = this.getValue(quad.arg1),
+        lhs = this.getValue(quad.arg2),
+        rhs = this.getValue(quad.arg3);
+    _lines.push(result + ' = ' + lhs + ' / ' + rhs + ';');
+  },
+
   /***************
    *  FUNCTIONS  *
    ***************/
