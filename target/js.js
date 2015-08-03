@@ -85,6 +85,9 @@ var JS = {
    * Initializes the program
    */
   INIT: function() {
+    // Have a variable for storing the return value from functions
+    _lines.push('var $__returnValue;');
+
     // Prepare reading
     _lines.push('process.stdin.resume();');
     _lines.push('var fs = require(\'fs\');');
@@ -346,6 +349,29 @@ var JS = {
    */
   RTN: function() {
     _lines.push('return;');
+  },
+
+
+  /**
+   * Returns a value from a function
+   * NOTE: Value will be stored in $__returnValue
+   * @param {QuadObj} quad
+   * @param {string}  quad.arg1 Value ID
+   */
+  RETURN: function(quad) {
+    _lines.push('return $__returnValue = ' + this.getValue(quad.arg1) + ';');
+  },
+
+
+
+  /**
+   * Loads the return value from a function and saves it locally
+   * NOTE: Return value is always stored in $__returnValue
+   * @param {QuadObj} quad
+   * @param {string}  quad.arg1 Result ID
+   */
+  PEEK: function(quad) {
+    _lines.push(this.getValue(quad.arg1) + ' = $__returnValue;');
   },
 
   /*********
