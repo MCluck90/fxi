@@ -256,6 +256,38 @@ var JS = {
     _lines.push(result + ' = ' + lhs + ' >= ' + rhs + ';');
   },
 
+  /*********************
+   *  LOGIC OPERATORS  *
+   *********************/
+
+  /**
+   * Performs a logical or
+   * @param {QuadObj} quad
+   * @param {string}  quad.arg1 Result ID
+   * @param {string}  quad.arg2 Left operand ID
+   * @param {string}  quad.arg3 Right operand ID
+   */
+  OR: function(quad) {
+    var result = this.getValue(quad.arg1),
+        lhs = this.getValue(quad.arg2),
+        rhs = this.getValue(quad.arg3);
+    _lines.push(result + ' = ' + lhs + ' || ' + rhs + ';');
+  },
+
+  /**
+   * Performs a logical and
+   * @param {QuadObj} quad
+   * @param {string}  quad.arg1 Result ID
+   * @param {string}  quad.arg2 Left operand ID
+   * @param {string}  quad.arg3 Right operand ID
+   */
+  AND: function(quad) {
+    var result = this.getValue(quad.arg1),
+        lhs = this.getValue(quad.arg2),
+        rhs = this.getValue(quad.arg3);
+    _lines.push(result + ' = ' + lhs + ' && ' + rhs + ';');
+  },
+
   /***************
    *  FUNCTIONS  *
    ***************/
