@@ -78,6 +78,22 @@ var JS = {
   },
 
   /**
+   * Returns a string for accessing a variable
+   */
+  getValue: function(symbolID) {
+    var symbol = SymbolTable.getSymbol(symbolID);
+    if (symbol.data.isFreeVar) {
+      return 'this.' + symbolID;
+    } else {
+      return symbolID;
+    }
+  },
+
+  /***************
+   *  FUNCTIONS  *
+   ***************/
+
+  /**
    * Initialize a function
    * @param {QuadObj} quad
    * @param {string}  quad.arg1 ID of the function to initialize
@@ -121,6 +137,20 @@ var JS = {
    */
   RTN: function() {
     _lines.push('return;');
+  },
+
+  /*********
+   *  I/O  *
+   *********/
+
+  /**
+   * Writes out a value to stdout
+   * @param {QuadObj} quad
+   * @param {string}  quad.arg2 ID of the variable to print
+   */
+  WRITE: function(quad) {
+    var value = this.getValue(quad.arg2);
+    _lines.push('process.stdout.write(' + value + ');');
   },
 
   /**
