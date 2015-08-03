@@ -62,7 +62,7 @@ runPass('syntax')
 .then('semantics')
 .then(function() {
   var ICode = require('./icode.js'),
-      TCode = require('./target/uvu.js'),
+      TCode = require('./target/js.js'),
       outputICode = argv.i || argv.icode,
       outputTCode = argv.o || argv.output,
       icode = '',
