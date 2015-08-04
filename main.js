@@ -61,8 +61,9 @@ runPass('syntax')
 .then('type inference')
 .then('semantics')
 .then(function() {
-  var ICode = require('./icode.js'),
-      TCode = require('./target/js.js'),
+  var target = argv.t || argv.target || 'uvu',
+      ICode = require('./icode.js'),
+      TCode = require('./target/' + target + '.js'),
       outputICode = argv.i || argv.icode,
       outputTCode = argv.o || argv.output,
       icode = '',

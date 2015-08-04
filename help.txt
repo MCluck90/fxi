@@ -13,3 +13,5 @@ Options:
                               is not given.
   -s, --symbol                Prints out the symbol table
   -d, --debug                 Enables debug mode
+  -t, --target                Pick which language to target.
+                              Defaults to UVU ASM
