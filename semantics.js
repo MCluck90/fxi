@@ -520,15 +520,18 @@ Semantics = {
     if (a.type !== 'int' || b.type !== 'int') {
       var aSymbol = SymbolTable.getSymbol(a.ID),
           bSymbol = SymbolTable.getSymbol(b.ID),
-          identifier;
+          identifier,
+          wrongType;
       if (a.type !== 'int' && aSymbol.type !== SymbolTypes.Temp) {
         identifier = aSymbol.value;
+        wrongType = a.type;
       } else if (b.type !== 'int' && bSymbol.type !== SymbolTypes.Temp) {
         identifier = bSymbol.value;
+        wrongType = b.type;
       } else {
-        identifier = 'Expression';
+        identifier = 'an expression';
       }
-      throwSemanticError(identifier + ' is not an integer');
+      throwSemanticError('Attempted to use ' + identifier + ' of type ' + wrongType + ' as an int');
     }
     Stack.action.push(temp);
 
@@ -600,7 +603,7 @@ Semantics = {
 
     TypeInference.addTypeDependency(lhs.ID, rhs.ID);
     if (lhs.type !== rhs.type) {
-      throwSemanticError(lhs.value + ' is of type ' + lhs.type + ', cannot assign a ' + rhs.type);
+      throwSemanticError(lhs.identifier + ' is of type ' + lhs.type + ', cannot assign a ' + rhs.type);
     }
 
     ICode.Assignment(lhs, rhs);
