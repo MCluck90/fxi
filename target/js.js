@@ -365,6 +365,18 @@ var JS = {
   },
 
   /**
+   * Pushes a variable into a function call
+   * @param {QuadObj} quad
+   * @param {string}  quad.arg1 Variable ID
+   */
+  PUSH: function(quad) {
+    if (_previousQuad.instruction === 'PUSH') {
+      _lines.push(', ');
+    }
+    _lines.push(this.getValue(quad.arg1));
+  },
+
+  /**
    * Begin a function call
    * @param {QuadObj} quad
    * @param {string}  quad.arg1 ID of the function to call
