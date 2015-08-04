@@ -45,7 +45,11 @@ function checkLexeme(lexeme, options) {
       }
     }
 
-    throw new SyntaxError(message + ', found ' + tokens.currentToken.lexeme);
+    var found = tokens.currentToken.lexeme;
+    if (found === undefined) {
+      found = 'end of file';
+    }
+    throw new SyntaxError(message + ', found ' + found);
   }
   var prevToken = tokens.currentToken;
   tokens.nextToken();

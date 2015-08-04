@@ -42,8 +42,13 @@ function runPass(passName) {
       Syntax.pass(passName);
     } catch(e) {
       var token = Scanner.currentToken;
-      e.message = '\nPass: ' + passName + '\nLine ' + token.lineNumber + ': ' + e.message;
-      throw e;
+      e.message = 'Pass: ' + passName + '\nLine ' + token.lineNumber + ': ' + e.message;
+      if (GLOBAL.DEBUG) {
+        throw e;
+      } else {
+        console.log(e.message);
+        process.exit(1);
+      }
     }
 
     if (_callbacks.length > 0) {
