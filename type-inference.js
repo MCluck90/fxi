@@ -509,6 +509,9 @@ TypeInference = {
 
       // Assign known types to symbols
       Object.keys(resolved).forEach(function(symID) {
+        if (symID === 'undefined') {
+          return;
+        }
         var resolvedNode = resolved[symID],
             symbol = SymbolTable.getSymbol(symID);
         symbol.data.type = resolvedNode.type || null;
