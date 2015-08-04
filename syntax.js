@@ -23,7 +23,7 @@ var ICode = require('./icode.js'),
 function checkLexeme(lexeme, options) {
   if (tokens.currentToken.lexeme !== lexeme) {
     if (lexeme === '}' && tokens.currentToken.lexeme === undefined) {
-      throw new Error('Missing ending curly brace');
+      throw new SyntaxError('Missing ending curly brace');
     }
 
     var message = 'Expected \'' + lexeme + '\'';
@@ -64,14 +64,26 @@ function checkLexeme(lexeme, options) {
  */
 function checkTokenType(type) {
   if (tokens.currentToken.type !== type) {
+    var found = tokens.currentToken.lexeme;
+    if (found === undefined) {
+      found = 'end of file';
+    }
     throw new SyntaxError(
       'Expected a ' + type.toLowerCase() +
-      ', found ' + tokens.currentToken.lexeme
+      ', found ' + found
     );
   }
   var prevToken = tokens.currentToken;
   tokens.nextToken();
   return prevToken;
+}
+
+function expected(exp) {
+  var found = tokens.currentToken.lexeme;
+  if (found === undefined) {
+    found = 'end of file';
+  }
+  throw new SyntaxError('Expected ' + exp + ', found ' + found);
 }
 
 var Syntax = {
@@ -214,7 +226,7 @@ var Syntax = {
       this.fn_declaration();
     } else {
       checkTokenType(TokenTypes.IDENTIFIER);
-      throw new Error('Expected assignment or arrow, found ' + tokens.currentToken.lexeme);
+      expected('assignment or arrow');
     }
   },
 
@@ -418,7 +430,7 @@ var Syntax = {
       checkLexeme(';');
       Semantics.read();
     } else {
-      throw new Error('Invalid statement');
+      expected('a statement');
     }
   },
 
@@ -514,7 +526,7 @@ var Syntax = {
         }
       }
     } else {
-      throw new Error('Invalid expression');
+      expected('an expression');
     }
 
     if (this.exp_z(true)) {
@@ -552,7 +564,7 @@ var Syntax = {
       tokens.nextToken();
       this.expression();
     } else {
-      throw new Error('Expected assignment, boolean expression, or math expression');
+      expected('an assignment, boolean expression or math expression');
     }
   },
 
@@ -606,7 +618,7 @@ var Syntax = {
     } else if (this.expression(true)) {
       this.expression();
     } else {
-      throw new Error('Expected lambda or expression, found ' + tokens.currentToken.lexeme);
+      expected('a lambda or expression');
     }
   }
 };
