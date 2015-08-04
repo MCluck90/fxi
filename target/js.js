@@ -85,6 +85,9 @@ var JS = {
    * Initializes the program
    */
   INIT: function() {
+    // Have a variable for generating a closure context
+    _lines.push('var $__closure;');
+
     // Have a variable for storing the return value from functions
     _lines.push('var $__returnValue;');
 
@@ -110,8 +113,11 @@ var JS = {
    * Returns a string for accessing a variable
    */
   getValue: function(symbolID) {
-    var symbol = SymbolTable.getSymbol(symbolID);
-    if (symbol.data.isFreeVar) {
+    var symbol = SymbolTable.getSymbol(symbolID),
+        isClosure = symbol.innerScope && symbol.scope._parent;
+    if (isClosure) {
+      return '$' + symbolID;
+    } else if (symbol.type === SymbolTypes.FreeVar) {
       return 'this.' + symbolID;
     } else {
       return symbolID;
@@ -301,6 +307,30 @@ var JS = {
    ***************/
 
   /**
+   * Generates a closure object
+   * @param {QuadObj} quad
+   * @param {string}  quad.arg1 Symbol ID
+   */
+  CLOSURE: function(quad) {
+    var symbolID = quad.arg1;
+    _lines.push('$__closure = {};');
+    _lines.push('$' + symbolID + ' = ' + symbolID + '.bind($__closure);');
+  },
+
+  /**
+   * Copies a value to a free variable
+   * @param {QuadObj} quad
+   * @param {string}  quad.arg1 Closure ID
+   * @param {string}  quad.arg2 Source value ID
+   * @param {string}  quad.arg3 Destination value ID
+   */
+  FREEVAR: function(quad) {
+    var source = this.getValue(quad.arg2),
+        dest = '$__closure.' + quad.arg3;
+    _lines.push(dest + ' = ' + source + ';');
+  },
+
+  /**
    * Initialize a function
    * @param {QuadObj} quad
    * @param {string}  quad.arg1 ID of the function to initialize
@@ -322,8 +352,16 @@ var JS = {
 
     // Generate local variables
     funcSymbol.innerScope.getLocalVariables().forEach(function(symbol) {
-      _lines.push('var ' + symbol.ID + ';');
-    });
+      if (symbol.type === SymbolTypes.FreeVar) {
+        return;
+      }
+      var isClosure = symbol.innerScope && symbol.scope._parent;
+      if (isClosure) {
+        _lines.push('var $' + symbol.ID + ';');
+      } else {
+        _lines.push('var ' + symbol.ID + ';');
+      }
+    }, this);
   },
 
   /**
@@ -332,7 +370,7 @@ var JS = {
    * @param {string}  quad.arg1 ID of the function to call
    */
   FRAME: function(quad) {
-    _lines.push(quad.arg1 + '(');
+    _lines.push(this.getValue(quad.arg1) + '(');
   },
 
   /**
