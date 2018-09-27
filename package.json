@@ -2,7 +2,11 @@
   "name": "fxi-compiler",
   "private": true,
   "version": "2.0.0",
+  "scripts": {
+    "build-parser": "pegjs -o src/parser.js src/fxi.pegjs"
+  },
   "dependencies": {
-    "minimist": "^1.1.1"
+    "minimist": "^1.1.1",
+    "pegjs": "^0.10.0"
   }
 }
