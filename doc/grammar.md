@@ -2,8 +2,8 @@
 
 ```
 // Comments can occur at any point in the code
-comment ::= "//" anything
-  | "/*" anything "*/"
+comment ::= "//" !end_of_line*
+  | "/*" !("*/")* "*/"
   ;
 
 keyword ::= "atoi"
