@@ -1,2 +1,2 @@
 @echo OFF
-node main.js %*
+node src/main.js %*
