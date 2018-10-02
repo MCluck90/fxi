@@ -28,8 +28,14 @@ Program = _ function_declarations:(decl:FunctionDeclaration _ { return decl; })*
 
 // TODO: Add comments
 
+_ = ws (Comment _)?
+
+Comment = LineComment / MultiLineComment
+LineComment = "//" [^\n]*
+MultiLineComment = "/*" !"*/"* "*/"
+
 // Optional whitespace
-_ = [ \t\r\n]* { }
+ws = [ \t\r\n]* { }
 
 // Required whitespace
 WS = [ \t\r\n]+ { }
